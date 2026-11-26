@@ -1,0 +1,2328 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>미드나잇 콜 : 미스터리 탈출 스터디</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: 손그림/픽셀 감성에 어울리는 고운돋움 & 둥근모꼴 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Press+Start+2P&display=swap" rel="stylesheet">
+  
+  <style>
+    /* 커스텀 폰트 및 픽셀/손그림 질감 스타일 */
+    :root {
+      --bg-outer: #13111c;
+      --bg-app: #222030;
+      --bg-panel: #2d2b40;
+      --bg-card: #38354f;
+      --accent-gold: #f5d061;
+      --accent-lavender: #b8a9ff;
+      --accent-mint: #8ce0c4;
+      --accent-rose: #ff9eb5;
+      --border-sketch: #4b4768;
+      --text-main: #f4f1ea;
+      --text-muted: #b0acc4;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      font-family: 'Gowun Dodum', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-outer);
+      color: var(--text-main);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 20% 20%, rgba(184, 169, 255, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(245, 208, 97, 0.06) 0%, transparent 40%);
+    }
+
+    /* 모바일 세로형 프레임 (첫 번째 와이어프레임 기반) */
+    .phone-frame {
+      width: 100%;
+      max-width: 420px;
+      height: 100vh;
+      max-height: 860px;
+      background-color: var(--bg-app);
+      border: 3px solid #59547a;
+      border-radius: 28px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75), inset 0 0 30px rgba(15, 13, 25, 0.6);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    @media (max-width: 440px) {
+      .phone-frame {
+        max-width: 100%;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+        border: none;
+      }
+    }
+
+    /* 손그림 컷 테두리 효과 */
+    .sketch-box {
+      border: 2px solid #6b658e;
+      border-radius: 16px;
+      box-shadow: 3px 3px 0px rgba(15, 13, 24, 0.5);
+    }
+
+    .sketch-btn {
+      border: 2px solid #756f99;
+      border-radius: 14px;
+      box-shadow: 0 3px 0 #171522;
+      transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.2s;
+    }
+    .sketch-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #171522;
+    }
+
+    /* 픽셀 아트 렌더링 보조 */
+    .pixel-art {
+      image-rendering: pixelated;
+    }
+
+    /* 애니메이션 효과 */
+    @keyframes floatSlow {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-5px); }
+    }
+    .animate-float {
+      animation: floatSlow 3s ease-in-out infinite;
+    }
+
+    @keyframes phoneVibrate {
+      0%, 100% { transform: rotate(0deg); }
+      20% { transform: rotate(-6deg); }
+      40% { transform: rotate(6deg); }
+      60% { transform: rotate(-5deg); }
+      80% { transform: rotate(5deg); }
+    }
+    .animate-vibrate {
+      animation: phoneVibrate 0.6s ease-in-out infinite;
+    }
+
+    @keyframes blinkEyes {
+      0%, 90%, 100% { transform: scaleY(1); }
+      95% { transform: scaleY(0.1); }
+    }
+    .eye-blink {
+      transform-origin: center;
+      animation: blinkEyes 4s infinite;
+    }
+
+    /* 커스텀 스크롤바 */
+    .custom-scroll::-webkit-scrollbar {
+      width: 5px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.03);
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #59547a;
+      border-radius: 10px;
+    }
+
+    /* 노이즈 텍스처 오버레이 (웹툰 종이 질감) */
+    .paper-grain {
+      background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 0);
+      background-size: 16px 16px;
+    }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="미드나잇 콜">
+  <meta name="theme-color" content="#222030">
+</head>
+<body>
+
+  <!-- 메인 모바일 프레임 -->
+  <div id="app" class="phone-frame paper-grain">
+    
+    <!-- 전역 알림 토스트 (alert 대체) -->
+    <div id="toast-box" class="pointer-events-none fixed top-6 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 opacity-0 transform -translate-y-4">
+      <div class="bg-[#3b3754] border-2 border-[#f5d061] text-[#f4f1ea] px-4 py-2.5 rounded-2xl shadow-xl flex items-center gap-2 text-sm font-bold whitespace-nowrap">
+        <span id="toast-icon">🔑</span>
+        <span id="toast-msg">알림 메시지</span>
+      </div>
+    </div>
+
+    <!-- =========================================================
+         [온보딩 1단계] 인트로 웹툰 스토리 슬라이드
+    ========================================================== -->
+    <section id="screen-story" class="flex-1 flex flex-col justify-between p-5 bg-gradient-to-b from-[#1a1826] to-[#262336] z-30">
+      <!-- 상단 진행바 및 스킵 버튼 -->
+      <div class="flex items-center justify-between gap-3 pt-1">
+        <div class="flex gap-1.5 flex-1">
+          <div id="story-dot-0" class="h-1.5 flex-1 rounded-full bg-[#f5d061] transition-all"></div>
+          <div id="story-dot-1" class="h-1.5 flex-1 rounded-full bg-[#474361] transition-all"></div>
+          <div id="story-dot-2" class="h-1.5 flex-1 rounded-full bg-[#474361] transition-all"></div>
+          <div id="story-dot-3" class="h-1.5 flex-1 rounded-full bg-[#474361] transition-all"></div>
+        </div>
+        <button onclick="skipToProfile()" class="text-xs px-3 py-1.5 rounded-full bg-[#36334d] text-[#d5d0e8] border border-[#5d5780] hover:bg-[#464263] transition">
+          스킵 ⏭
+        </button>
+      </div>
+
+      <!-- 만화 컷 일러스트 영역 (SVG 손그림 스타일) -->
+      <div class="my-3 flex-1 flex flex-col justify-center">
+        <div id="story-illustration" class="w-full aspect-square max-h-[340px] mx-auto bg-[#2a273b] sketch-box overflow-hidden relative flex items-center justify-center p-2">
+          <!-- JS로 각 컷의 SVG 장면이 동적 렌더링됨 -->
+        </div>
+      </div>
+
+      <!-- 만화 내레이션 및 대사 박스 -->
+      <div class="bg-[#2e2b42] sketch-box p-4 mb-2">
+        <div class="flex items-center justify-between mb-1.5">
+          <span id="story-badge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-[#433e5e] text-[#f5d061]">SCENE 01 · 새벽 4:00</span>
+          <span id="story-sfx" class="text-xs text-[#b8a9ff] italic">"하암..."</span>
+        </div>
+        <p id="story-text" class="text-sm sm:text-base leading-relaxed text-[#f4f1ea] min-h-[68px]">
+          침대에서 눈을 떴다. 개운하게 기지개를 켜며 하품을 했지만, 시계는 새벽 4시를 가리키고 주변이 유난히 어둡다.
+        </p>
+        <div class="flex justify-between items-center mt-3 pt-2 border-t border-[#454161]">
+          <button id="btn-story-prev" onclick="prevStory()" class="px-3 py-1.5 text-xs rounded-xl bg-[#3a3652] text-[#b0acc4] disabled:opacity-30" disabled>
+            ◀ 이전 컷
+          </button>
+          <button id="btn-story-next" onclick="nextStory()" class="sketch-btn px-5 py-2 text-sm font-bold bg-[#f5d061] text-[#1e1b2c]">
+            다음 장면 ▶
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================
+         [온보딩 2단계] 주인공 이름 & 나이 입력 화면
+    ========================================================== -->
+    <section id="screen-profile-input" class="hidden flex-1 flex flex-col justify-between p-6 bg-gradient-to-b from-[#1e1c2b] to-[#29263b] z-30 overflow-y-auto custom-scroll">
+      <div class="pt-4 text-center">
+        <span class="inline-block text-xs px-3 py-1 rounded-full bg-[#3a3654] text-[#b8a9ff] border border-[#5d5780] mb-3">
+          📞 폴더폰 수신 완료 · 생존자 등록
+        </span>
+        <h2 class="text-2xl font-bold text-[#f4f1ea] mb-2">당신은 누구인가요?</h2>
+        <p class="text-xs text-[#b0acc4] leading-relaxed">
+          이 기이한 공간에서 함께 탈출할 수 있도록<br>친구들에게 알려줄 이름과 나이를 적어주세요.
+        </p>
+      </div>
+
+      <!-- 주인공 아바타 미리보기 & 아바타 스타일 선택 -->
+      <div class="my-4 bg-[#2e2b42] sketch-box p-4 flex flex-col items-center">
+        <div id="onboarding-avatar-preview" class="w-24 h-28 flex items-center justify-center mb-2 animate-float">
+          <!-- 주인공 픽셀 SVG -->
+        </div>
+        <div class="flex gap-2 mt-1">
+          <button type="button" onclick="selectAvatarStyle(0)" id="av-style-0" class="px-2.5 py-1 text-xs rounded-lg border border-[#f5d061] bg-[#454063] text-[#f5d061]">만두머리 잠옷</button>
+          <button type="button" onclick="selectAvatarStyle(1)" id="av-style-1" class="px-2.5 py-1 text-xs rounded-lg border border-[#59547a] bg-[#34314a] text-[#b0acc4]">단발 후드티</button>
+          <button type="button" onclick="selectAvatarStyle(2)" id="av-style-2" class="px-2.5 py-1 text-xs rounded-lg border border-[#59547a] bg-[#34314a] text-[#b0acc4]">안경 파자마</button>
+        </div>
+      </div>
+
+      <!-- 이름 및 나이 입력 폼 -->
+      <form id="profile-form" onsubmit="submitProfile(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-[#d5d0e8] mb-1.5">주인공 이름 (닉네임)</label>
+          <input type="text" id="input-name" required maxlength="10" placeholder="예: 김하늘" 
+            class="w-full px-4 py-3 rounded-xl bg-[#1d1b29] border-2 border-[#59547a] text-[#f4f1ea] placeholder-[#6f6a8c] focus:outline-none focus:border-[#f5d061] text-sm" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-[#d5d0e8] mb-1.5">나이 (세)</label>
+          <input type="number" id="input-age" required min="7" max="99" placeholder="예: 16" 
+            class="w-full px-4 py-3 rounded-xl bg-[#1d1b29] border-2 border-[#59547a] text-[#f4f1ea] placeholder-[#6f6a8c] focus:outline-none focus:border-[#f5d061] text-sm" />
+        </div>
+        <button type="submit" class="w-full sketch-btn py-3.5 bg-[#f5d061] text-[#1e1b2c] font-bold text-base mt-2">
+          등록하고 친구들 만나기 ✨
+        </button>
+      </form>
+    </section>
+
+    <!-- =========================================================
+         [온보딩 3단계] 세 명의 과목 요정(친구) 상세 소개
+    ========================================================== -->
+    <section id="screen-fairies" class="hidden flex-1 flex flex-col justify-between p-5 bg-gradient-to-b from-[#1e1c2b] to-[#28253a] z-30 overflow-y-auto custom-scroll">
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs px-2.5 py-1 rounded-full bg-[#383452] text-[#8ce0c4] font-bold">📞 단축번호 연결됨</span>
+          <button onclick="enterMainHome()" class="text-xs px-3 py-1.5 rounded-full bg-[#383452] text-[#f5d061] border border-[#f5d061]/50 hover:bg-[#484369]">
+            스킵 / 홈으로 가기 ➔
+          </button>
+        </div>
+        <h2 class="text-lg font-bold text-[#f4f1ea]">
+          <span id="fairy-welcome-name" class="text-[#f5d061]">주인공</span>님을 돕는 과목 요정들
+        </h2>
+        <p class="text-xs text-[#b0acc4] mt-0.5">각 방의 잠긴 문을 열려면 친구들의 과목 지식이 필요해요!</p>
+      </div>
+
+      <!-- 요정 선택 탭 -->
+      <div class="grid grid-cols-3 gap-2 my-3">
+        <button onclick="showFairyDetail(0)" id="fairy-tab-0" class="py-2 px-1 rounded-xl border-2 border-[#f5d061] bg-[#3b3754] text-center transition">
+          <div class="text-xs font-bold text-[#f5d061]">김시율</div>
+          <div class="text-[10px] text-[#d5d0e8]">국어 · 영어</div>
+        </button>
+        <button onclick="showFairyDetail(1)" id="fairy-tab-1" class="py-2 px-1 rounded-xl border-2 border-[#524d70] bg-[#2c2940] text-center transition">
+          <div class="text-xs font-bold text-[#8ce0c4]">한나안</div>
+          <div class="text-[10px] text-[#b0acc4]">수학 · 과학</div>
+        </button>
+        <button onclick="showFairyDetail(2)" id="fairy-tab-2" class="py-2 px-1 rounded-xl border-2 border-[#524d70] bg-[#2c2940] text-center transition">
+          <div class="text-xs font-bold text-[#ff9eb5]">권예경</div>
+          <div class="text-[10px] text-[#b0acc4]">역사 · 음미체</div>
+        </button>
+      </div>
+
+      <!-- 요정 상세 카드 -->
+      <div id="fairy-detail-card" class="flex-1 bg-[#2e2b42] sketch-box p-4 flex flex-col justify-between my-1">
+        <!-- JS로 동적 렌더링 -->
+      </div>
+
+      <button onclick="enterMainHome()" class="w-full sketch-btn py-3.5 mt-3 bg-[#8ce0c4] text-[#192421] font-bold text-sm">
+        스킵하고 탈출 홈 화면으로 입장 🔑
+      </button>
+    </section>
+
+    <!-- =========================================================
+         [메인 앱 화면] 와이어프레임 구조 (상단 햄버거 / 본문 / 하단 3버튼)
+    ========================================================== -->
+    <div id="screen-main" class="hidden flex-1 flex flex-col h-full overflow-hidden">
+      
+      <!-- 1. 상단 바 (첫 번째 이미지 왼쪽 상단 햄버거 아이콘 반영) -->
+      <header class="px-4 py-3 bg-[#262436] border-b-2 border-[#454161] flex items-center justify-between shrink-0 z-20">
+        <!-- 좌측 햄버거 버튼 (세 줄 스케치 반영) -->
+        <button onclick="toggleDrawer(true)" aria-label="메뉴 열기" class="p-2 rounded-xl hover:bg-[#35324a] active:scale-95 transition flex flex-col justify-center gap-1.5 w-10 h-10">
+          <span class="block w-6 h-0.5 bg-[#f4f1ea] rounded-full"></span>
+          <span class="block w-5 h-0.5 bg-[#f5d061] rounded-full"></span>
+          <span class="block w-6 h-0.5 bg-[#f4f1ea] rounded-full"></span>
+        </button>
+
+        <!-- 중앙 타이틀 -->
+        <div class="text-center">
+          <div class="text-xs font-bold tracking-wider text-[#b8a9ff]">MIDNIGHT ESCAPE</div>
+          <div id="header-user-info" class="text-xs text-[#d5d0e8]">김하늘 (16세)</div>
+        </div>
+
+        <!-- 우측 열쇠 개수 배지 -->
+        <div class="flex items-center gap-1.5 bg-[#1c1a29] border border-[#f5d061]/60 px-3 py-1.5 rounded-full">
+          <span class="text-sm">🔑</span>
+          <span id="header-key-count" class="text-sm font-bold text-[#f5d061]">3</span>
+        </div>
+      </header>
+
+      <!-- 2. 메인 콘텐츠 뷰포트 (탭에 따라 전환) -->
+      <main class="flex-1 overflow-y-auto custom-scroll p-4 pb-6 relative">
+        
+        <!-- -------------------------------------------------------
+             [탭 1: 왼쪽 버튼] 탐험 (현재 열린 맵, 미니게임, 모드)
+        -------------------------------------------------------- -->
+        <div id="tab-explore" class="hidden space-y-4">
+          <!-- 서브 탭 전환 버튼 -->
+          <div class="grid grid-cols-3 gap-1.5 bg-[#1c1a29] p-1.5 rounded-2xl border border-[#454161]">
+            <button onclick="switchExploreSub('map')" id="sub-btn-map" class="py-2 text-xs font-bold rounded-xl bg-[#3c3857] text-[#f5d061] transition">🗺️ 열린 맵</button>
+            <button onclick="switchExploreSub('minigame')" id="sub-btn-minigame" class="py-2 text-xs font-bold rounded-xl text-[#b0acc4] transition">🎮 미니게임</button>
+            <button onclick="switchExploreSub('mode')" id="sub-btn-mode" class="py-2 text-xs font-bold rounded-xl text-[#b0acc4] transition">⏱️ 학습 모드</button>
+          </div>
+
+          <!-- [서브 1-1] 현재 열린 맵 (기이한 복도와 방들) -->
+          <div id="explore-sub-map" class="space-y-3">
+            <div class="bg-[#2e2b42] sketch-box p-3.5">
+              <div class="flex justify-between items-center mb-2">
+                <h3 class="text-sm font-bold text-[#f5d061]">🚪 기이한 복도 탐색도</h3>
+                <span id="map-progress-text" class="text-xs text-[#8ce0c4]">해금된 방: 2 / 4</span>
+              </div>
+              <p class="text-xs text-[#b0acc4] mb-3">열쇠를 사용하거나 과목 미션을 클리어해 다음 층의 문을 여세요.</p>
+              
+              <!-- 층별 방 카드 리스트 -->
+              <div id="map-rooms-list" class="space-y-2.5">
+                <!-- JS 렌더링 -->
+              </div>
+            </div>
+          </div>
+
+          <!-- [서브 1-2] 미니게임 (과목 요정 퀴즈 챌린지) -->
+          <div id="explore-sub-minigame" class="hidden space-y-3">
+            <div class="bg-[#2e2b42] sketch-box p-4">
+              <h3 class="text-sm font-bold text-[#b8a9ff] mb-1">👾 과목별 긴급 암호 해독</h3>
+              <p class="text-xs text-[#b0acc4] mb-3">원하는 단일 과목을 선택해 문제를 맞히면 탈출 열쇠(+1🔑)를 얻습니다!</p>
+              
+              <!-- 개별 8과목 필터 버튼 -->
+              <div id="quiz-subject-pills" class="flex gap-1.5 mb-3 overflow-x-auto pb-1.5 custom-scroll">
+                <!-- JS로 국어/영어/수학/과학/역사/음악/미술/체육 버튼 렌더링 -->
+              </div>
+
+              <!-- 퀴즈 플레이 영역 -->
+              <div id="quiz-arena" class="bg-[#1f1d2e] rounded-2xl p-4 border border-[#524d70]">
+                <!-- JS로 퀴즈 렌더링 -->
+              </div>
+            </div>
+          </div>
+
+          <!-- [서브 1-3] 모드 (집중 타이머 / 퀴즈 탈출 / 복습 모드) -->
+          <div id="explore-sub-mode" class="hidden space-y-3">
+            <div class="bg-[#2e2b42] sketch-box p-4 text-center">
+              <span id="current-mode-badge" class="inline-block text-xs px-3 py-1 rounded-full bg-[#3f3a5c] text-[#8ce0c4] font-bold mb-2">
+                현재 모드: ⏱️ 과목별 집중 타이머 모드
+              </span>
+              <h3 class="text-base font-bold text-[#f4f1ea] mb-1">과목 선택 집중 공부 타이머</h3>
+              <p class="text-xs text-[#b0acc4] mb-3">공부할 과목을 선택하고 타이머를 시작하면 통계 원그래프에 자동 기록됩니다!</p>
+
+              <!-- 공부할 과목 선택 버튼 -->
+              <div id="timer-subject-pills" class="flex gap-1.5 overflow-x-auto pb-2 mb-3 custom-scroll justify-start sm:justify-center">
+                <!-- JS로 8개 과목 선택 버튼 렌더링 -->
+              </div>
+              
+              <!-- 타이머 디스플레이 -->
+              <div class="w-44 h-44 mx-auto rounded-full border-4 border-[#f5d061] bg-[#1c1a29] flex flex-col items-center justify-center shadow-inner mb-4">
+                <span id="timer-selected-subject" class="text-xs font-bold text-[#f5d061] mb-1">📖 국어 집중 중</span>
+                <div id="timer-display" class="text-3xl font-bold tracking-wider text-[#f4f1ea]">25:00</div>
+                <span id="timer-status" class="text-[11px] text-[#8ce0c4] mt-1">대기 중</span>
+              </div>
+
+              <!-- 시간 프리셋 & 컨트롤 -->
+              <div class="flex justify-center gap-2 mb-3">
+                <button onclick="setTimerMinutes(1)" class="px-2.5 py-1 text-xs rounded-lg bg-[#383452] text-[#8ce0c4] border border-[#8ce0c4]/40">1분(테스트)</button>
+                <button onclick="setTimerMinutes(10)" class="px-3 py-1 text-xs rounded-lg bg-[#383452] text-[#d5d0e8]">10분</button>
+                <button onclick="setTimerMinutes(25)" class="px-3 py-1 text-xs rounded-lg bg-[#383452] text-[#f5d061] border border-[#f5d061]/50">25분</button>
+                <button onclick="setTimerMinutes(50)" class="px-3 py-1 text-xs rounded-lg bg-[#383452] text-[#d5d0e8]">50분</button>
+              </div>
+              <div class="flex gap-2">
+                <button id="btn-timer-toggle" onclick="toggleStudyTimer()" class="flex-1 sketch-btn py-2.5 bg-[#f5d061] text-[#1e1b2c] font-bold text-sm">
+                  ▶ 집중 시작
+                </button>
+                <button onclick="finishStudyEarly()" class="px-3 sketch-btn py-2.5 bg-[#8ce0c4] text-[#192421] font-bold text-xs">
+                  기록 저장
+                </button>
+                <button onclick="resetStudyTimer()" class="px-3 sketch-btn py-2.5 bg-[#3a3652] text-[#d5d0e8] text-xs">
+                  초기화
+                </button>
+              </div>
+            </div>
+
+            <!-- 학습 모드 전환 카드 -->
+            <div class="bg-[#2e2b42] sketch-box p-3.5 space-y-2">
+              <div class="text-xs font-bold text-[#d5d0e8] mb-1">학습 방식 전환</div>
+              <button onclick="selectStudyMode('과목별 집중 타이머 모드')" class="w-full text-left p-2.5 rounded-xl bg-[#383452] hover:bg-[#433e61] flex items-center justify-between">
+                <div>
+                  <div class="text-xs font-bold text-[#f5d061]">⏱️ 과목별 집중 타이머 모드</div>
+                  <div class="text-[11px] text-[#b0acc4]">선택한 과목의 순수 공부 시간을 원그래프 통계에 누적</div>
+                </div>
+                <span class="text-xs text-[#8ce0c4]">선택</span>
+              </button>
+              <button onclick="selectStudyMode('방탈출 실전 퀴즈 모드')" class="w-full text-left p-2.5 rounded-xl bg-[#383452] hover:bg-[#433e61] flex items-center justify-between">
+                <div>
+                  <div class="text-xs font-bold text-[#8ce0c4]">🚪 방탈출 실전 퀴즈 모드</div>
+                  <div class="text-[11px] text-[#b0acc4]">과목별 문제를 풀고 탈출 열쇠 획득</div>
+                </div>
+                <span class="text-xs text-[#8ce0c4]">선택</span>
+              </button>
+              <button onclick="selectStudyMode('어둠 속 오답 복습 모드')" class="w-full text-left p-2.5 rounded-xl bg-[#383452] hover:bg-[#433e61] flex items-center justify-between">
+                <div>
+                  <div class="text-xs font-bold text-[#ff9eb5]">🕯️ 어둠 속 오답 복습 모드</div>
+                  <div class="text-[11px] text-[#b0acc4]">틀렸던 개념을 요정들과 차분히 다시 점검</div>
+                </div>
+                <span class="text-xs text-[#8ce0c4]">선택</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- -------------------------------------------------------
+             [탭 2: 가운데 버튼 (기본)] 홈 (아바타, 현재 갖고 있는 열쇠, 폴더폰 전화)
+        -------------------------------------------------------- -->
+        <div id="tab-home" class="space-y-4">
+          <!-- 주인공 아바타 & 상태 방 카드 -->
+          <div class="bg-gradient-to-b from-[#2f2b45] to-[#252238] sketch-box p-4 relative overflow-hidden">
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="text-[11px] px-2.5 py-0.5 rounded-full bg-[#1c1a29] text-[#b8a9ff] border border-[#524d70]">
+                  📍 현재 위치: 1층 거실 소파 앞
+                </span>
+                <h2 class="text-lg font-bold text-[#f4f1ea] mt-1.5">
+                  <span id="home-user-name">김하늘</span>님의 탐험 상태
+                </h2>
+                <p id="home-status-msg" class="text-xs text-[#b0acc4]">"창밖의 검은 그림자가 사라졌다... 열쇠를 모으자!"</p>
+              </div>
+              <button onclick="changeAvatarQuick()" class="text-[11px] px-2.5 py-1 rounded-lg bg-[#3c3857] text-[#f5d061] border border-[#5d5780]">
+                옷 갈아입기 👕
+              </button>
+            </div>
+
+            <!-- 중앙 아바타 & 열쇠 보관함 -->
+            <div class="mt-3 grid grid-cols-2 gap-3 items-center bg-[#1d1b2b]/80 rounded-2xl p-3 border border-[#474263]">
+              <!-- 아바타 표시 -->
+              <div class="flex flex-col items-center justify-center border-r border-[#3b3754] pr-2">
+                <div id="home-avatar-box" class="w-24 h-28 flex items-center justify-center animate-float">
+                  <!-- 아바타 SVG -->
+                </div>
+                <span id="home-avatar-label" class="text-[11px] text-[#d5d0e8] mt-1 font-bold">LV.1 탈출 초보자</span>
+              </div>
+
+              <!-- 현재 갖고 있는 열쇠 현황 -->
+              <div class="flex flex-col justify-between h-full py-1">
+                <div>
+                  <div class="text-xs font-bold text-[#f5d061] flex items-center gap-1">
+                    <span>🔑 보유한 탈출 열쇠</span>
+                  </div>
+                  <div class="text-2xl font-bold text-[#f4f1ea] mt-0.5">
+                    <span id="home-key-count">3</span> <span class="text-xs font-normal text-[#b0acc4]">개</span>
+                  </div>
+                </div>
+
+                <!-- 열쇠 슬롯 아이콘 시각화 -->
+                <div id="home-key-slots" class="flex flex-wrap gap-1.5 my-2">
+                  <!-- JS로 열쇠 아이콘 렌더링 -->
+                </div>
+
+                <button onclick="switchMainTab('explore')" class="w-full py-1.5 rounded-xl bg-[#f5d061]/20 border border-[#f5d061] text-[#f5d061] text-xs font-bold hover:bg-[#f5d061]/30 transition">
+                  열쇠로 문 열러 가기 ➔
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 소파 위 폴더폰: 친구(요정)들에게 전화 걸기 -->
+          <div class="bg-[#2e2b42] sketch-box p-4">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <span class="text-base animate-vibrate inline-block">📱</span>
+                <h3 class="text-sm font-bold text-[#f4f1ea]">과목 요정 단축 다이얼</h3>
+              </div>
+              <span class="text-[11px] text-[#8ce0c4]">● 신호 양호</span>
+            </div>
+            <p class="text-xs text-[#b0acc4] mb-3">막히는 과목이 있나요? 친구에게 전화를 걸어 공부 힌트와 응원을 받으세요!</p>
+
+            <!-- 3명의 요정 전화 버튼 -->
+            <div class="grid grid-cols-3 gap-2">
+              <button onclick="callFairy(0)" class="sketch-btn bg-[#383452] hover:bg-[#433e61] p-2.5 flex flex-col items-center text-center">
+                <div id="mini-fairy-0" class="w-12 h-14 mb-1"></div>
+                <span class="text-xs font-bold text-[#f5d061]">김시율</span>
+                <span class="text-[10px] text-[#d5d0e8]">국어·영어</span>
+                <span class="mt-1 text-[10px] px-2 py-0.5 rounded-full bg-[#f5d061] text-[#1e1b2c] font-bold">📞 통화</span>
+              </button>
+
+              <button onclick="callFairy(1)" class="sketch-btn bg-[#383452] hover:bg-[#433e61] p-2.5 flex flex-col items-center text-center">
+                <div id="mini-fairy-1" class="w-12 h-14 mb-1"></div>
+                <span class="text-xs font-bold text-[#8ce0c4]">한나안</span>
+                <span class="text-[10px] text-[#d5d0e8]">수학·과학</span>
+                <span class="mt-1 text-[10px] px-2 py-0.5 rounded-full bg-[#8ce0c4] text-[#1e1b2c] font-bold">📞 통화</span>
+              </button>
+
+              <button onclick="callFairy(2)" class="sketch-btn bg-[#383452] hover:bg-[#433e61] p-2.5 flex flex-col items-center text-center">
+                <div id="mini-fairy-2" class="w-12 h-14 mb-1"></div>
+                <span class="text-xs font-bold text-[#ff9eb5]">권예경</span>
+                <span class="text-[10px] text-[#d5d0e8]">역사·음미체</span>
+                <span class="mt-1 text-[10px] px-2 py-0.5 rounded-full bg-[#ff9eb5] text-[#1e1b2c] font-bold">📞 통화</span>
+              </button>
+            </div>
+
+            <!-- 실시간 폴더폰 통화 화면 (통화 시 표시) -->
+            <div id="phone-call-box" class="hidden mt-3 bg-[#1b1929] border-2 border-[#b8a9ff] rounded-2xl p-3.5 transition-all">
+              <div class="flex items-center justify-between border-b border-[#36324f] pb-2 mb-2">
+                <div class="flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-[#8ce0c4] animate-ping"></span>
+                  <span id="call-fairy-title" class="text-xs font-bold text-[#f5d061]">김시율 요정과 통화 중...</span>
+                </div>
+                <button onclick="closeCallBox()" class="text-xs text-[#b0acc4] hover:text-white">통화 종료 ✖</button>
+              </div>
+              <p id="call-dialogue" class="text-xs leading-relaxed text-[#f4f1ea] bg-[#28253b] p-2.5 rounded-xl mb-2.5">
+                "여보세요? 나 시율이! 국어 문법이나 영어 단어가 헷갈릴 땐 언제든 물어봐!"
+              </p>
+              <div class="flex gap-2">
+                <button id="btn-call-hint" onclick="getFairyStudyTip()" class="flex-1 py-1.5 rounded-xl bg-[#3c3857] text-[#8ce0c4] text-xs font-bold border border-[#8ce0c4]/40">
+                  💡 오늘의 암기 팁 듣기
+                </button>
+                <button id="btn-call-quiz" onclick="goFairyQuiz()" class="flex-1 py-1.5 rounded-xl bg-[#f5d061] text-[#1e1b2c] text-xs font-bold">
+                  🔑 퀴즈 풀고 열쇠 얻기
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 과목별 학습 사진 첨부 & 요정 맞춤 조언 스튜디오 -->
+          <div class="bg-[#2e2b42] sketch-box p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-1.5">
+                <span class="text-base">📸</span>
+                <h3 class="text-sm font-bold text-[#f4f1ea]">과목별 학습 사진 첨부 & 요정 조언</h3>
+              </div>
+              <span id="photo-fairy-badge" class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#f5d061]/20 text-[#f5d061] border border-[#f5d061]/50">
+                시율 담당
+              </span>
+            </div>
+            <p class="text-xs text-[#b0acc4] leading-relaxed">
+              지금 공부하는 교과서·프린트·노트 사진을 과목별로 올려보세요! 담당 요정이 배운 파트를 보고 핵심 조언과 암기 팁을 알려줍니다.
+            </p>
+
+            <!-- 8개 과목 선택 버튼 -->
+            <div id="photo-subject-pills" class="flex gap-1.5 overflow-x-auto pb-1.5 custom-scroll">
+              <!-- JS로 국어/영어/수학/과학/역사/음악/미술/체육 버튼 렌더링 -->
+            </div>
+
+            <!-- 선택된 과목 사진 업로드 & 미리보기 영역 -->
+            <div class="bg-[#1e1c2b] rounded-2xl p-3.5 border border-[#4b4768] space-y-3">
+              <div class="flex items-center justify-between gap-2">
+                <span id="photo-selected-label" class="text-xs font-bold text-[#f5d061]">📖 국어 파트 사진</span>
+                <div class="flex gap-1.5">
+                  <label for="subject-photo-input" class="cursor-pointer px-3 py-1.5 rounded-xl bg-[#3c3857] hover:bg-[#494469] text-[#f4f1ea] text-xs font-bold border border-[#6b658e] transition">
+                    📷 사진 첨부
+                  </label>
+                  <button type="button" id="btn-clear-photo" onclick="clearSubjectPhoto()" class="hidden px-2.5 py-1.5 rounded-xl bg-[#3a2633] text-[#ff9eb5] text-xs font-bold border border-[#ff9eb5]/40">
+                    삭제
+                  </button>
+                </div>
+                <input type="file" id="subject-photo-input" accept="image/*" class="hidden" onchange="handleSubjectPhotoUpload(event)" />
+              </div>
+
+              <!-- 이미지 미리보기 박스 -->
+              <div id="photo-preview-box" class="w-full min-h-[130px] rounded-xl bg-[#15131f] border border-dashed border-[#524d70] flex flex-col items-center justify-center p-3 text-center overflow-hidden">
+                <span class="text-2xl mb-1 opacity-70">🖼️</span>
+                <span class="text-xs text-[#8b86a3]">첨부된 사진이 없습니다.<br>위 [사진 첨부] 버튼을 눌러 학습 자료를 올려주세요.</span>
+              </div>
+
+              <!-- 요정에게 사진 보여주고 조언 요청 버튼 -->
+              <button type="button" id="btn-analyze-photo" onclick="analyzeSubjectPhoto()" class="w-full sketch-btn py-2.5 bg-[#8ce0c4] text-[#192421] font-bold text-xs flex items-center justify-center gap-1.5">
+                <span>🧚</span>
+                <span id="btn-analyze-photo-text">김시율 요정에게 사진 보여주고 조언 받기</span>
+              </button>
+
+              <!-- 요정 맞춤 조언 & 팁 출력 카드 -->
+              <div id="photo-advice-box" class="hidden bg-[#272438] border-2 border-[#b8a9ff] rounded-xl p-3 space-y-2">
+                <div class="flex items-center gap-2.5 pb-2 border-b border-[#3e3a59]">
+                  <div id="photo-advice-avatar" class="w-10 h-12 shrink-0"></div>
+                  <div>
+                    <div id="photo-advice-fairy-name" class="text-xs font-bold text-[#f5d061]">김시율 요정의 맞춤 분석</div>
+                    <div id="photo-advice-part" class="text-[11px] text-[#8ce0c4]">분석된 학습 파트</div>
+                  </div>
+                </div>
+                <div id="photo-advice-content" class="text-xs leading-relaxed text-[#f4f1ea] whitespace-pre-line">
+                  <!-- AI 또는 요정 맞춤 조언 내용 -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- -------------------------------------------------------
+             [탭 3: 오른쪽 버튼] 기록 (통계, TO-DO)
+        -------------------------------------------------------- -->
+        <div id="tab-records" class="hidden space-y-4">
+          <!-- 서브 탭 전환 -->
+          <div class="grid grid-cols-2 gap-1.5 bg-[#1c1a29] p-1.5 rounded-2xl border border-[#454161]">
+            <button onclick="switchRecordSub('todo')" id="rec-btn-todo" class="py-2 text-xs font-bold rounded-xl bg-[#3c3857] text-[#f5d061] transition">✅ 오늘의 TO-DO</button>
+            <button onclick="switchRecordSub('stats')" id="rec-btn-stats" class="py-2 text-xs font-bold rounded-xl text-[#b0acc4] transition">📊 과목별 통계</button>
+          </div>
+
+          <!-- [서브 3-1] TO-DO 리스트 -->
+          <div id="record-sub-todo" class="space-y-3">
+            <div class="bg-[#2e2b42] sketch-box p-4">
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="text-sm font-bold text-[#f5d061]">📝 과목별 탈출 일지 (TO-DO)</h3>
+                <span id="todo-counter" class="text-xs text-[#8ce0c4]">완료 1 / 8</span>
+              </div>
+              <p class="text-xs text-[#b0acc4] mb-3">과목별로 할 일을 나누어 관리하고, 체크 완료 시 열쇠(+1🔑)를 획득하세요!</p>
+
+              <!-- 개별 과목 필터 탭 (전체 + 8개 과목 분리) -->
+              <div id="todo-filter-bar" class="flex gap-1.5 overflow-x-auto pb-2 mb-3 custom-scroll">
+                <!-- JS 렌더링 -->
+              </div>
+
+              <!-- 할 일 입력 폼 (8개 과목 개별 선택) -->
+              <form onsubmit="addTodoItem(event)" class="flex gap-1.5 mb-3">
+                <select id="todo-subject" aria-label="과목 선택" class="px-2.5 py-2 rounded-xl bg-[#1c1a29] border border-[#59547a] text-xs text-[#f4f1ea] focus:outline-none focus:border-[#f5d061]">
+                  <option value="국어">국어</option>
+                  <option value="영어">영어</option>
+                  <option value="수학">수학</option>
+                  <option value="과학">과학</option>
+                  <option value="역사">역사</option>
+                  <option value="음악">음악</option>
+                  <option value="미술">미술</option>
+                  <option value="체육">체육</option>
+                </select>
+                <input type="text" id="todo-input" required placeholder="공부 목표 입력..." 
+                  class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-[#1c1a29] border border-[#59547a] text-xs text-[#f4f1ea] placeholder-[#6f6a8c] focus:outline-none focus:border-[#f5d061]" />
+                <button type="submit" class="px-3 py-2 rounded-xl bg-[#f5d061] text-[#1e1b2c] font-bold text-xs shrink-0">
+                  추가
+                </button>
+              </form>
+
+              <!-- 할 일 목록 -->
+              <ul id="todo-list" class="space-y-2">
+                <!-- JS 렌더링 -->
+              </ul>
+            </div>
+          </div>
+
+          <!-- [서브 3-2] 과목별 학습 통계 (원그래프) -->
+          <div id="record-sub-stats" class="hidden space-y-3">
+            <div class="bg-[#2e2b42] sketch-box p-4">
+              <h3 class="text-sm font-bold text-[#b8a9ff] mb-1">📊 8개 과목별 공부 비율 원그래프</h3>
+              <p class="text-xs text-[#b0acc4] mb-4">학습모드 타이머, TO-DO 완료, 미니게임으로 공부한 시간이 원그래프로 집계됩니다.</p>
+
+              <!-- 요약 카드 3개 -->
+              <div class="grid grid-cols-3 gap-2 mb-4 text-center">
+                <div class="bg-[#1f1d2e] p-2.5 rounded-xl border border-[#474263]">
+                  <div class="text-[11px] text-[#b0acc4]">완료한 할 일</div>
+                  <div id="stat-todo-done" class="text-base font-bold text-[#8ce0c4] mt-0.5">1개</div>
+                </div>
+                <div class="bg-[#1f1d2e] p-2.5 rounded-xl border border-[#474263]">
+                  <div class="text-[11px] text-[#b0acc4]">보유 열쇠</div>
+                  <div id="stat-total-keys" class="text-base font-bold text-[#f5d061] mt-0.5">3개</div>
+                </div>
+                <div class="bg-[#1f1d2e] p-2.5 rounded-xl border border-[#474263]">
+                  <div class="text-[11px] text-[#b0acc4]">누적 집중</div>
+                  <div id="stat-total-mins" class="text-base font-bold text-[#ff9eb5] mt-0.5">115분</div>
+                </div>
+              </div>
+
+              <!-- SVG 원그래프 (도넛 차트) 영역 -->
+              <div class="bg-[#1f1d2e] p-4 rounded-2xl border border-[#454161] mb-3 flex flex-col items-center">
+                <div id="pie-chart-wrapper" class="relative w-52 h-52 flex items-center justify-center">
+                  <!-- JS로 SVG 원그래프 동적 렌더링 -->
+                </div>
+                <div id="pie-selected-detail" class="mt-2 text-xs text-center text-[#d5d0e8] bg-[#2a273d] px-3 py-1.5 rounded-full border border-[#4b4768]">
+                  조각을 누르면 과목별 상세 시간을 볼 수 있어요
+                </div>
+              </div>
+
+              <!-- 8개 과목별 범례 그리드 -->
+              <div id="subject-legend-container" class="grid grid-cols-2 gap-2">
+                <!-- JS 렌더링 -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </main>
+
+      <!-- 3. 하단 내비게이션 바 (첫 번째 와이어프레임 이미지의 하단 3개 버튼 완벽 반영) -->
+      <footer class="bg-[#201e2e] border-t-2 border-[#4b4768] px-4 py-2.5 shrink-0 z-20">
+        <div class="grid grid-cols-3 gap-3 items-center">
+          <!-- 왼쪽 버튼: 맵 / 미니게임 / 모드 -->
+          <button onclick="switchMainTab('explore')" id="nav-btn-explore" class="flex flex-col items-center justify-center py-1.5 px-2 rounded-2xl border-2 border-transparent text-[#b0acc4] hover:bg-[#2d2a40] transition">
+            <span class="text-lg leading-none mb-1">🗺️</span>
+            <span class="text-[11px] font-bold">맵·게임·모드</span>
+          </button>
+
+          <!-- 가운데 홈 버튼: 아바타 / 현재 갖고 있는 열쇠 -->
+          <button onclick="switchMainTab('home')" id="nav-btn-home" class="flex flex-col items-center justify-center py-2 px-3 rounded-full border-2 border-[#f5d061] bg-[#36324f] text-[#f5d061] shadow-md transition">
+            <span class="text-lg leading-none mb-0.5">🏠</span>
+            <span class="text-[11px] font-bold">홈 · 열쇠</span>
+          </button>
+
+          <!-- 오른쪽 버튼: 통계 / TO-DO -->
+          <button onclick="switchMainTab('records')" id="nav-btn-records" class="flex flex-col items-center justify-center py-1.5 px-2 rounded-2xl border-2 border-transparent text-[#b0acc4] hover:bg-[#2d2a40] transition">
+            <span class="text-lg leading-none mb-1">📊</span>
+            <span class="text-[11px] font-bold">통계·TO-DO</span>
+          </button>
+        </div>
+      </footer>
+    </div>
+
+    <!-- =========================================================
+         [상단 좌측 햄버거 메뉴 드로어]
+    ========================================================== -->
+    <div id="drawer-overlay" onclick="toggleDrawer(false)" class="hidden absolute inset-0 bg-black/60 z-40 transition-opacity"></div>
+    <aside id="side-drawer" class="absolute top-0 left-0 bottom-0 w-72 bg-[#252236] border-r-2 border-[#59547a] z-50 transform -translate-x-full transition-transform duration-300 flex flex-col justify-between p-5">
+      <div>
+        <div class="flex items-center justify-between pb-4 border-b border-[#454161]">
+          <div>
+            <div class="text-xs text-[#b8a9ff] font-bold">MIDNIGHT STUDY</div>
+            <div id="drawer-profile-title" class="text-base font-bold text-[#f4f1ea]">김하늘 (16세)</div>
+          </div>
+          <button onclick="toggleDrawer(false)" class="w-8 h-8 rounded-full bg-[#36324f] text-[#f4f1ea] flex items-center justify-center">✕</button>
+        </div>
+
+        <nav class="mt-4 space-y-2">
+          <button onclick="replayStory()" class="w-full text-left px-3.5 py-3 rounded-xl bg-[#2f2c45] hover:bg-[#3c3857] text-sm text-[#f4f1ea] flex items-center gap-2.5">
+            <span>📖</span> <span>인트로 만화 스토리 다시보기</span>
+          </button>
+          <button onclick="reopenFairies()" class="w-full text-left px-3.5 py-3 rounded-xl bg-[#2f2c45] hover:bg-[#3c3857] text-sm text-[#f4f1ea] flex items-center gap-2.5">
+            <span>🧚</span> <span>과목 요정(친구) 도감 보기</span>
+          </button>
+          <button onclick="reopenProfileEdit()" class="w-full text-left px-3.5 py-3 rounded-xl bg-[#2f2c45] hover:bg-[#3c3857] text-sm text-[#f4f1ea] flex items-center gap-2.5">
+            <span>✏️</span> <span>이름 · 나이 · 아바타 수정</span>
+          </button>
+          <button onclick="resetAllProgress()" class="w-full text-left px-3.5 py-3 rounded-xl bg-[#3a2633] hover:bg-[#4a2f40] border border-[#ff9eb5]/40 text-sm text-[#ff9eb5] flex items-center gap-2.5">
+            <span>🔄</span> <span>진행도 초기화 (처음부터)</span>
+          </button>
+        </nav>
+
+        <!-- 빠른 요정 요약 -->
+        <div class="mt-5 bg-[#1d1b2b] p-3.5 rounded-2xl border border-[#454161]">
+          <div class="text-xs font-bold text-[#f5d061] mb-2">📞 담당 요정 단축 메모</div>
+          <ul class="space-y-1.5 text-xs text-[#d5d0e8]">
+            <li>• <strong class="text-[#f5d061]">김시율</strong>: 국어 / 영어</li>
+            <li>• <strong class="text-[#8ce0c4]">한나안</strong>: 수학 / 과학</li>
+            <li>• <strong class="text-[#ff9eb5]">권예경</strong>: 역사 / 음악 / 미술 / 체육</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="text-[11px] text-[#8b86a3] text-center">
+        새벽 4시의 미스터리 탈출 스터디 v1.0
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- =========================================================
+       애플리케이션 로직 & 인터랙티브 데이터 스크립트
+  ========================================================== -->
+  <script>
+    // -----------------------------------------------------------
+    // 1. 개별 8개 과목 메타데이터 & 전역 상태 관리 (localStorage 연동)
+    // -----------------------------------------------------------
+    const STORAGE_KEY = 'midnight_call_study_v2';
+
+    const SUBJECT_LIST = ['국어', '영어', '수학', '과학', '역사', '음악', '미술', '체육'];
+
+    const SUBJECT_META = {
+      '국어': { fairy: '시율 담당', fairyId: 'siyul', color: '#f5d061', badge: 'bg-[#f5d061]/20 text-[#f5d061] border-[#f5d061]/50', icon: '📖' },
+      '영어': { fairy: '시율 담당', fairyId: 'siyul', color: '#ffd97d', badge: 'bg-[#ffd97d]/20 text-[#ffd97d] border-[#ffd97d]/50', icon: '🔤' },
+      '수학': { fairy: '나안 담당', fairyId: 'naan', color: '#8ce0c4', badge: 'bg-[#8ce0c4]/20 text-[#8ce0c4] border-[#8ce0c4]/50', icon: '📐' },
+      '과학': { fairy: '나안 담당', fairyId: 'naan', color: '#70d6ff', badge: 'bg-[#70d6ff]/20 text-[#70d6ff] border-[#70d6ff]/50', icon: '🧪' },
+      '역사': { fairy: '예경 담당', fairyId: 'yekyung', color: '#ff9eb5', badge: 'bg-[#ff9eb5]/20 text-[#ff9eb5] border-[#ff9eb5]/50', icon: '🏛️' },
+      '음악': { fairy: '예경 담당', fairyId: 'yekyung', color: '#d4a5ff', badge: 'bg-[#d4a5ff]/20 text-[#d4a5ff] border-[#d4a5ff]/50', icon: '🎵' },
+      '미술': { fairy: '예경 담당', fairyId: 'yekyung', color: '#ffb482', badge: 'bg-[#ffb482]/20 text-[#ffb482] border-[#ffb482]/50', icon: '🎨' },
+      '체육': { fairy: '예경 담당', fairyId: 'yekyung', color: '#a3e635', badge: 'bg-[#a3e635]/20 text-[#a3e635] border-[#a3e635]/50', icon: '⚽' }
+    };
+
+    const defaultTodos = [
+      { id: 1, subject: '국어', text: '비문학 지문 2개 요약하기', done: true },
+      { id: 2, subject: '영어', text: '영단어 30개 암기하기', done: false },
+      { id: 3, subject: '수학', text: '이차방정식 문제집 10문제', done: false },
+      { id: 4, subject: '과학', text: '화학 반응식 정리하기', done: false },
+      { id: 5, subject: '역사', text: '조선 시대 연표 복습하기', done: false },
+      { id: 6, subject: '음악', text: '서양 음악사 시대별 특징 정리', done: false },
+      { id: 7, subject: '미술', text: '미술 사조 대표작 5선 암기', done: false },
+      { id: 8, subject: '체육', text: '구기 종목 규칙 정리하기', done: false }
+    ];
+
+    const appState = {
+      hasOnboarded: false,
+      userName: '김하늘',
+      userAge: 16,
+      avatarStyle: 0,
+      keys: 3,
+      totalKeysEarned: 3,
+      storyIndex: 0,
+      selectedFairy: 0,
+      currentTab: 'home',
+      selectedTodoFilter: '전체',
+      selectedQuizSubject: '국어',
+      selectedPhotoSubject: '국어',
+      subjectPhotos: {},
+      unlockedRooms: [true, true, false, false, false],
+      studyMinutes: {
+        '국어': 20, '영어': 20, '수학': 25, '과학': 15,
+        '역사': 15, '음악': 10, '미술': 5, '체육': 5
+      },
+      quizSolvedCount: 7,
+      currentQuiz: null,
+      activeCallFairy: 0,
+      timerSubject: '국어',
+      timerSeconds: 25 * 60,
+      timerInitialSeconds: 25 * 60,
+      timerRunning: false,
+      timerInterval: null,
+      todos: JSON.parse(JSON.stringify(defaultTodos))
+    };
+
+    function saveState() {
+      try {
+        const toSave = {
+          hasOnboarded: appState.hasOnboarded,
+          userName: appState.userName,
+          userAge: appState.userAge,
+          avatarStyle: appState.avatarStyle,
+          keys: appState.keys,
+          totalKeysEarned: appState.totalKeysEarned,
+          unlockedRooms: appState.unlockedRooms,
+          studyMinutes: appState.studyMinutes,
+          quizSolvedCount: appState.quizSolvedCount,
+          todos: appState.todos
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+      } catch (err) {
+        // 스토리지 제한 환경 무시
+      }
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return false;
+        const parsed = JSON.parse(raw);
+        Object.assign(appState, parsed);
+        return Boolean(appState.hasOnboarded);
+      } catch (err) {
+        return false;
+      }
+    }
+
+    // -----------------------------------------------------------
+    // 2. 업로드된 만화 4컷 스토리 데이터 (SVG 손그림 일러스트 포함)
+    // -----------------------------------------------------------
+    const storyScenes = [
+      {
+        badge: 'SCENE 01 · 새벽 4:00 기상',
+        sfx: '"하암..."',
+        text: '침대에서 눈을 떴다. 개운하게 기지개를 켜며 하품을 했지만, 탁상시계는 새벽 4시를 가리키고 주변이 유난히 어둡다.',
+        svg: `
+          <svg viewBox="0 0 300 300" class="w-full h-full rounded-xl">
+            <rect width="300" height="300" fill="#232033"/>
+            <!-- 벽면 및 창틀 그림자 -->
+            <rect x="20" y="15" width="75" height="170" fill="#1b1829" stroke="#3c3754" stroke-width="2"/>
+            <rect x="205" y="15" width="75" height="170" fill="#1b1829" stroke="#3c3754" stroke-width="2"/>
+            <!-- 협탁과 토끼 인형, 4:00 시계 -->
+            <rect x="195" y="165" width="90" height="55" rx="6" fill="#322e47" stroke="#524c70" stroke-width="2"/>
+            <ellipse cx="222" cy="148" rx="14" ry="15" fill="#7c7699"/>
+            <ellipse cx="216" cy="128" rx="4" ry="11" fill="#7c7699"/>
+            <ellipse cx="228" cy="128" rx="4" ry="11" fill="#7c7699"/>
+            <circle cx="218" cy="146" r="1.8" fill="#1b1829"/>
+            <circle cx="226" cy="146" r="1.8" fill="#1b1829"/>
+            <rect x="236" y="142" width="44" height="24" rx="4" fill="#161421" stroke="#6c668c" stroke-width="2"/>
+            <text x="258" y="158" text-anchor="middle" fill="#8ce0c4" font-size="11" font-family="monospace" font-weight="bold">4:00</text>
+            <!-- 침대 이불 -->
+            <path d="M15 220 Q90 190 165 215 Q230 195 285 220 L285 290 L15 290 Z" fill="#3b3654" stroke="#5d5680" stroke-width="2"/>
+            <!-- 주인공 (만두머리 + 초록 줄무늬 잠옷 기지개) -->
+            <g transform="translate(115, 78)">
+              <!-- 기지개 팔 -->
+              <path d="M12 72 L-16 42 L-6 34 L20 62" fill="#5e7868" stroke="#2c283d" stroke-width="2"/>
+              <path d="M58 72 L86 42 L76 34 L50 62" fill="#5e7868" stroke="#2c283d" stroke-width="2"/>
+              <circle cx="-13" cy="36" r="6" fill="#f3d6c6"/>
+              <circle cx="83" cy="36" r="6" fill="#f3d6c6"/>
+              <!-- 잠옷 몸통 -->
+              <rect x="14" y="62" width="42" height="58" rx="8" fill="#5e7868" stroke="#2c283d" stroke-width="2"/>
+              <line x1="25" y1="63" x2="25" y2="119" stroke="#3c5245" stroke-width="2"/>
+              <line x1="35" y1="63" x2="35" y2="119" stroke="#3c5245" stroke-width="2"/>
+              <line x1="45" y1="63" x2="45" y2="119" stroke="#3c5245" stroke-width="2"/>
+              <!-- 만두머리 & 얼굴 -->
+              <circle cx="35" cy="10" r="13" fill="#4f3d36" stroke="#261d1a" stroke-width="2"/>
+              <circle cx="35" cy="38" r="24" fill="#f3d6c6" stroke="#261d1a" stroke-width="2"/>
+              <path d="M11 36 Q12 14 35 14 Q58 14 59 36 Q48 24 35 26 Q22 24 11 36 Z" fill="#4f3d36"/>
+              <!-- 감은 눈과 하품 입 -->
+              <line x1="23" y1="38" x2="30" y2="38" stroke="#261d1a" stroke-width="2" stroke-linecap="round"/>
+              <line x1="40" y1="38" x2="47" y2="38" stroke="#261d1a" stroke-width="2" stroke-linecap="round"/>
+              <ellipse cx="35" cy="48" rx="4.5" ry="5.5" fill="#c96b78"/>
+            </g>
+            <!-- 효과음 텍스트 -->
+            <text x="215" y="65" fill="#d5d0e8" font-size="22" font-weight="bold">하암</text>
+            <line x1="92" y1="75" x2="102" y2="83" stroke="#f5d061" stroke-width="2"/>
+            <line x1="87" y1="86" x2="99" y2="90" stroke="#f5d061" stroke-width="2"/>
+          </svg>
+        `
+      },
+      {
+        badge: 'SCENE 02 · 커튼 밖의 정체',
+        sfx: '"스윽... 왝?!"',
+        text: '찜찜한 기분으로 거실로 나와 펄럭이는 커튼을 양옆으로 확 젖혔다. 창밖엔 아무것도 없는 사후세계처럼 칠흑 같은 어둠 속, 빨간 눈의 검은 형체가 나타났다!',
+        svg: `
+          <svg viewBox="0 0 300 300" class="w-full h-full rounded-xl">
+            <rect width="300" height="300" fill="#1e1b2b"/>
+            <!-- 창밖 사후세계 같은 칠흑의 어둠 -->
+            <rect x="65" y="18" width="170" height="240" fill="#09080d" stroke="#4c4669" stroke-width="2"/>
+            <!-- 몸 전체가 까맣고 빨간 눈을 가진 존재 -->
+            <path d="M108 258 Q104 140 124 95 Q132 76 146 86 Q155 78 166 86 Q180 76 188 95 Q208 140 202 258 Z" fill="#121017" stroke="#2d293b" stroke-width="2"/>
+            <circle cx="144" cy="122" r="4.5" fill="#ff3b5c"/>
+            <circle cx="168" cy="122" r="4.5" fill="#ff3b5c"/>
+            <circle cx="144" cy="122" r="1.8" fill="#ffd6de"/>
+            <circle cx="168" cy="122" r="1.8" fill="#ffd6de"/>
+            <!-- 놀람 표시 & 대사 -->
+            <text x="236" y="118" fill="#ff9eb5" font-size="20" font-weight="bold">왝?!</text>
+            <line x1="115" y1="75" x2="107" y2="63" stroke="#f5d061" stroke-width="2.5"/>
+            <line x1="196" y1="75" x2="205" y2="63" stroke="#f5d061" stroke-width="2.5"/>
+            <!-- 양옆으로 젖혀진 커튼 -->
+            <path d="M10 15 L82 15 L66 285 L10 285 Z" fill="#7a735c" stroke="#3c382c" stroke-width="2"/>
+            <path d="M218 15 L290 15 L290 285 L234 285 Z" fill="#7a735c" stroke="#3c382c" stroke-width="2"/>
+            <!-- 뒷모습 주인공 (커튼을 잡은 양손) -->
+            <g transform="translate(56, 132)">
+              <circle cx="16" cy="48" r="9" fill="#f3d6c6" stroke="#261d1a" stroke-width="2"/>
+              <circle cx="152" cy="75" r="9" fill="#f3d6c6" stroke="#261d1a" stroke-width="2"/>
+              <path d="M22 52 L48 75 L48 155 L112 155 L112 85 L145 78" fill="#5e7868" stroke="#2c283d" stroke-width="2"/>
+              <circle cx="78" cy="24" r="14" fill="#4f3d36" stroke="#261d1a" stroke-width="2"/>
+              <circle cx="78" cy="54" r="27" fill="#4f3d36" stroke="#261d1a" stroke-width="2"/>
+            </g>
+            <text x="26" y="135" fill="#d5d0e8" font-size="16" font-weight="bold">스윽</text>
+          </svg>
+        `
+      },
+      {
+        badge: 'SCENE 03 · 긴급 도주',
+        sfx: '"꺄악! 다다다 / 철컥"',
+        text: '비명을 지르며 재빨리 다른 방문을 향해 달려가 문고리를 잡아당겼다. 어둠 속에서 빠져나갈 출구를 찾아야 한다!',
+        svg: `
+          <svg viewBox="0 0 300 300" class="w-full h-full rounded-xl">
+            <rect width="300" height="300" fill="#252236"/>
+            <!-- 원근감 있는 어두운 복도와 문 -->
+            <polygon points="0,0 105,65 105,225 0,300" fill="#1c1929" stroke="#454061" stroke-width="2"/>
+            <polygon points="300,0 195,65 195,225 300,300" fill="#1c1929" stroke="#454061" stroke-width="2"/>
+            <rect x="105" y="65" width="90" height="160" fill="#2d2942" stroke="#5c5680" stroke-width="2"/>
+            <!-- 반쯤 열린 문 틈의 칠흑 -->
+            <rect x="148" y="67" width="24" height="156" fill="#09080f"/>
+            <rect x="172" y="142" width="12" height="7" rx="2" fill="#8b85ab"/>
+            <!-- 속도선 -->
+            <line x1="15" y1="45" x2="70" y2="75" stroke="#b8a9ff" stroke-width="2"/>
+            <line x1="10" y1="115" x2="68" y2="125" stroke="#b8a9ff" stroke-width="2"/>
+            <line x1="285" y1="45" x2="230" y2="75" stroke="#b8a9ff" stroke-width="2"/>
+            <line x1="290" y1="115" x2="232" y2="125" stroke="#b8a9ff" stroke-width="2"/>
+            <!-- 1인칭 달리는 두 주먹과 잠옷 소매 -->
+            <g transform="translate(55, 195)">
+              <rect x="0" y="25" width="44" height="85" rx="10" transform="rotate(-18 22 45)" fill="#5e7868" stroke="#261d1a" stroke-width="2"/>
+              <circle cx="24" cy="18" r="15" fill="#f3d6c6" stroke="#261d1a" stroke-width="2"/>
+            </g>
+            <g transform="translate(195, 195)">
+              <rect x="0" y="25" width="44" height="85" rx="10" transform="rotate(18 22 45)" fill="#5e7868" stroke="#261d1a" stroke-width="2"/>
+              <circle cx="20" cy="18" r="15" fill="#f3d6c6" stroke="#261d1a" stroke-width="2"/>
+            </g>
+            <text x="35" y="55" fill="#ff9eb5" font-size="22" font-weight="bold">꺄악!!</text>
+            <text x="195" y="55" fill="#f5d061" font-size="18" font-weight="bold">다다다 / 철컥</text>
+          </svg>
+        `
+      },
+      {
+        badge: 'SCENE 04 · 기이한 복도와 폴더폰',
+        sfx: '"위잉- (예경 · 시율 · 나안)"',
+        text: '위에서 내려다보는 각도로 기이한 방들이 짜라락 펼쳐진 순간, 소파 위 폴더폰이 울렸다! 전화를 받아보니 예경, 시율, 나안도 똑같은 상황이었다!',
+        svg: `
+          <svg viewBox="0 0 300 300" class="w-full h-full rounded-xl">
+            <rect width="300" height="300" fill="#232033"/>
+            <!-- 위에서 아래로 내려다보는 삼각 구도의 빛나는 복도와 방들 -->
+            <polygon points="150,25 45,175 255,175" fill="#3a334d" stroke="#7c739e" stroke-width="2"/>
+            <polygon points="150,25 110,175 190,175" fill="#d9be79" opacity="0.85"/>
+            <!-- 양옆으로 늘어선 방 블록들 -->
+            <rect x="52" y="65" width="42" height="35" fill="#2e2a42" stroke="#5d5680" stroke-width="2"/>
+            <rect x="206" y="65" width="42" height="35" fill="#2e2a42" stroke="#5d5680" stroke-width="2"/>
+            <rect x="34" y="112" width="48" height="42" fill="#2e2a42" stroke="#5d5680" stroke-width="2"/>
+            <rect x="218" y="112" width="48" height="42" fill="#2e2a42" stroke="#5d5680" stroke-width="2"/>
+            <!-- 끝의 황금 문 -->
+            <rect x="137" y="14" width="26" height="34" rx="12" fill="#f5d061" stroke="#fff3b0" stroke-width="2"/>
+            <!-- 내려다보는 주인공 뒷모습 -->
+            <circle cx="150" cy="112" r="9" fill="#4f3d36"/>
+            <circle cx="150" cy="128" r="16" fill="#4f3d36" stroke="#1e1b29" stroke-width="2"/>
+            <rect x="136" y="143" width="28" height="32" rx="6" fill="#5e7868" stroke="#1e1b29" stroke-width="2"/>
+            <!-- 하단 소파와 진동하는 폴더폰 + 수신 창 -->
+            <rect x="15" y="188" width="270" height="98" rx="16" fill="#332d47" stroke="#59517a" stroke-width="2"/>
+            <!-- 폴더폰 -->
+            <g transform="translate(42, 200)">
+              <rect x="4" y="4" width="32" height="34" rx="5" fill="#e6e1f5" stroke="#1c1929" stroke-width="2"/>
+              <rect x="9" y="9" width="22" height="22" rx="2" fill="#f5d061"/>
+              <rect x="4" y="40" width="32" height="34" rx="5" fill="#cfc9e6" stroke="#1c1929" stroke-width="2"/>
+              <text x="20" y="-4" text-anchor="middle" fill="#f5d061" font-size="11" font-weight="bold">위잉-</text>
+            </g>
+            <!-- 친구 3명 그룹통화 말풍선 -->
+            <rect x="98" y="200" width="172" height="74" rx="14" fill="#1e1c2b" stroke="#8ce0c4" stroke-width="2"/>
+            <text x="112" y="220" fill="#ff9eb5" font-size="12" font-weight="bold">● 예경 : 여기도 완전 깜깜해!</text>
+            <text x="112" y="240" fill="#f5d061" font-size="12" font-weight="bold">● 시율 : 다들 전화 끊지 마!</text>
+            <text x="112" y="260" fill="#8ce0c4" font-size="12" font-weight="bold">● 나안 : 방 열쇠를 찾으면 돼!</text>
+          </svg>
+        `
+      }
+    ];
+
+    // -----------------------------------------------------------
+    // 3. 주인공 픽셀 아바타 SVG 생성기 (3가지 스타일)
+    // -----------------------------------------------------------
+    function getPlayerAvatarSVG(styleIdx = 0) {
+      if (styleIdx === 1) {
+        // 스타일 1: 단발 후드티
+        return `
+          <svg viewBox="0 0 64 80" class="w-full h-full pixel-art" shape-rendering="crispEdges">
+            <!-- 단발 머리카락 -->
+            <rect x="18" y="8" width="28" height="28" fill="#3d3138"/>
+            <rect x="14" y="14" width="36" height="24" fill="#3d3138"/>
+            <!-- 얼굴 -->
+            <rect x="20" y="16" width="24" height="20" fill="#f7dfd2"/>
+            <rect x="22" y="16" width="20" height="4" fill="#3d3138"/>
+            <rect x="25" y="24" width="3" height="3" fill="#231f20"/>
+            <rect x="36" y="24" width="3" height="3" fill="#231f20"/>
+            <rect x="22" y="28" width="3" height="2" fill="#f2a7b0"/>
+            <rect x="39" y="28" width="3" height="2" fill="#f2a7b0"/>
+            <rect x="30" y="30" width="4" height="2" fill="#d97b84"/>
+            <!-- 라벤더 후드티 -->
+            <rect x="18" y="38" width="28" height="20" fill="#7c6fa8"/>
+            <rect x="13" y="40" width="5" height="14" fill="#6b5e96"/>
+            <rect x="46" y="40" width="5" height="14" fill="#6b5e96"/>
+            <rect x="26" y="42" width="12" height="4" fill="#f5d061"/>
+            <!-- 반바지 & 양말 -->
+            <rect x="20" y="58" width="10" height="8" fill="#2e2b40"/>
+            <rect x="34" y="58" width="10" height="8" fill="#2e2b40"/>
+            <rect x="22" y="66" width="6" height="8" fill="#f7dfd2"/>
+            <rect x="36" y="66" width="6" height="8" fill="#f7dfd2"/>
+            <rect x="20" y="73" width="9" height="4" fill="#ffffff"/>
+            <rect x="35" y="73" width="9" height="4" fill="#ffffff"/>
+          </svg>
+        `;
+      }
+      if (styleIdx === 2) {
+        // 스타일 2: 안경 별빛 파자마
+        return `
+          <svg viewBox="0 0 64 80" class="w-full h-full pixel-art" shape-rendering="crispEdges">
+            <!-- 묶은 머리 -->
+            <rect x="20" y="8" width="24" height="24" fill="#4a3b35"/>
+            <rect x="16" y="14" width="32" height="18" fill="#4a3b35"/>
+            <!-- 얼굴 & 동그란 안경 -->
+            <rect x="20" y="16" width="24" height="20" fill="#f7dfd2"/>
+            <rect x="22" y="22" width="8" height="6" fill="none" stroke="#59547a" stroke-width="1.5"/>
+            <rect x="34" y="22" width="8" height="6" fill="none" stroke="#59547a" stroke-width="1.5"/>
+            <rect x="30" y="24" width="4" height="1.5" fill="#59547a"/>
+            <rect x="25" y="24" width="2.5" height="2.5" fill="#231f20"/>
+            <rect x="37" y="24" width="2.5" height="2.5" fill="#231f20"/>
+            <rect x="30" y="31" width="4" height="2" fill="#d97b84"/>
+            <!-- 네이비 별 파자마 -->
+            <rect x="18" y="38" width="28" height="22" fill="#3a446e"/>
+            <rect x="13" y="40" width="5" height="16" fill="#323b61"/>
+            <rect x="46" y="40" width="5" height="16" fill="#323b61"/>
+            <rect x="24" y="44" width="3" height="3" fill="#f5d061"/>
+            <rect x="37" y="50" width="3" height="3" fill="#f5d061"/>
+            <rect x="20" y="60" width="10" height="13" fill="#3a446e"/>
+            <rect x="34" y="60" width="10" height="13" fill="#3a446e"/>
+            <rect x="19" y="73" width="11" height="4" fill="#f5d061"/>
+            <rect x="34" y="73" width="11" height="4" fill="#f5d061"/>
+          </svg>
+        `;
+      }
+      // 스타일 0 (기본): 만두머리 & 초록 줄무늬 잠옷 (웹툰 주인공 원형)
+      return `
+        <svg viewBox="0 0 64 80" class="w-full h-full pixel-art" shape-rendering="crispEdges">
+          <!-- 만두머리 -->
+          <rect x="26" y="2" width="12" height="8" fill="#523e36"/>
+          <rect x="18" y="9" width="28" height="24" fill="#523e36"/>
+          <rect x="15" y="15" width="34" height="16" fill="#523e36"/>
+          <!-- 얼굴 -->
+          <rect x="20" y="16" width="24" height="20" fill="#f7dfd2"/>
+          <rect x="22" y="16" width="20" height="4" fill="#523e36"/>
+          <rect x="25" y="24" width="3" height="3" fill="#231f20"/>
+          <rect x="36" y="24" width="3" height="3" fill="#231f20"/>
+          <rect x="22" y="28" width="3" height="2" fill="#f2a7b0"/>
+          <rect x="39" y="28" width="3" height="2" fill="#f2a7b0"/>
+          <rect x="30" y="30" width="4" height="3" fill="#d97b84"/>
+          <!-- 초록 줄무늬 잠옷 상·하의 -->
+          <rect x="18" y="38" width="28" height="20" fill="#6c8776"/>
+          <rect x="22" y="38" width="2" height="20" fill="#4f6658"/>
+          <rect x="31" y="38" width="2" height="20" fill="#4f6658"/>
+          <rect x="40" y="38" width="2" height="20" fill="#4f6658"/>
+          <rect x="13" y="40" width="5" height="15" fill="#6c8776"/>
+          <rect x="46" y="40" width="5" height="15" fill="#6c8776"/>
+          <rect x="20" y="58" width="10" height="15" fill="#6c8776"/>
+          <rect x="34" y="58" width="10" height="15" fill="#6c8776"/>
+          <rect x="19" y="73" width="11" height="4" fill="#9fb8d9"/>
+          <rect x="34" y="73" width="11" height="4" fill="#9fb8d9"/>
+        </svg>
+      `;
+    }
+
+    // -----------------------------------------------------------
+    // 4. 세 명의 과목 요정(친구) 상세 데이터 & 픽셀 아트 SVG
+    // -----------------------------------------------------------
+    const fairiesData = [
+      {
+        id: 'siyul',
+        name: '김시율',
+        role: '국어 · 영어 담당 요정',
+        color: '#f5d061',
+        badgeBg: 'bg-[#f5d061]/20 text-[#f5d061]',
+        outfit: '브릿지 사이드 포니테일 & 블랙 R.O.K.A 티셔츠',
+        personality: '쿨하고 듬직한 어조로 핵심만 딱 짚어주는 언어 천재 요정! 헷갈리는 맞춤법과 문법, 독해 포인트를 명쾌하게 정리해 줍니다.',
+        skills: [
+          '국어 비문학 핵심 문단 요약 & 맞춤법 교정',
+          '영어 필수 숙어·문법 구조 10초 핵심 해독',
+          '2층 언어 암호실 자물쇠 힌트 제공'
+        ],
+        quotes: [
+          '"여보세요? 나 시율이! 긴장 풀고 지문 첫 문장이랑 마지막 문장부터 같이 보자."',
+          '"영단어는 뜻만 외우지 말고 예문 속 위치로 기억하면 절대 안 까먹어!"',
+          '"어두운 복도라도 내 목소리 들리니까 괜찮아. 한 문제씩 차근차근 풀자."'
+        ],
+        tip: '💡 [시율의 암기 팁] 국어 비문학은 접속어(그러나, 따라서) 뒤에 필자의 핵심 주장이 숨어 있어! 영어는 동사 시제부터 먼저 체크해 봐.',
+        svg: `
+          <svg viewBox="0 0 64 80" class="w-full h-full pixel-art" shape-rendering="crispEdges">
+            <!-- 갈색 머리 & 금빛 브릿지 사이드 포니테일 -->
+            <rect x="18" y="8" width="28" height="24" fill="#6e5a4f"/>
+            <rect x="22" y="10" width="6" height="8" fill="#c7b28b"/>
+            <rect x="36" y="10" width="6" height="8" fill="#c7b28b"/>
+            <rect x="44" y="28" width="8" height="18" fill="#6e5a4f"/>
+            <rect x="46" y="30" width="4" height="14" fill="#c7b28b"/>
+            <!-- 얼굴 & 고양이 입매 -->
+            <rect x="20" y="16" width="24" height="20" fill="#f8e3d6"/>
+            <rect x="22" y="16" width="20" height="4" fill="#6e5a4f"/>
+            <rect x="25" y="24" width="3" height="3" fill="#231f20"/>
+            <rect x="36" y="24" width="3" height="3" fill="#231f20"/>
+            <rect x="29" y="30" width="6" height="2" fill="#231f20"/>
+            <!-- 블랙 R.O.K.A 반팔티 & 반바지 -->
+            <rect x="17" y="38" width="30" height="20" fill="#242329"/>
+            <rect x="12" y="40" width="5" height="10" fill="#242329"/>
+            <rect x="47" y="40" width="5" height="10" fill="#242329"/>
+            <!-- 소매 태극기 패치 디테일 -->
+            <rect x="48" y="45" width="4" height="3" fill="#ffffff"/>
+            <rect x="49" y="46" width="2" height="1.5" fill="#e63946"/>
+            <rect x="33" y="43" width="11" height="2" fill="#ffffff"/>
+            <rect x="19" y="58" width="11" height="8" fill="#1e1d24"/>
+            <rect x="34" y="58" width="11" height="8" fill="#1e1d24"/>
+            <!-- 맨발 -->
+            <rect x="21" y="66" width="6" height="11" fill="#f8e3d6"/>
+            <rect x="37" y="66" width="6" height="11" fill="#f8e3d6"/>
+          </svg>
+        `
+      },
+      {
+        id: 'naan',
+        name: '한나안',
+        role: '수학 · 과학 담당 요정',
+        color: '#8ce0c4',
+        badgeBg: 'bg-[#8ce0c4]/20 text-[#8ce0c4]',
+        outfit: '긴 웨이브 헤어 & 화이트 고양이 맨투맨',
+        personality: '차분하고 논리적인 수리·과학 요정! 복잡한 공식이나 과학 원리도 그림 그리듯 쉽고 다정하게 풀어 설명해 줍니다.',
+        skills: [
+          '수학 방정식·함수 단계별 풀이 가이드',
+          '과학 실험 원리 및 상태 변화·화학식 정리',
+          '3층 수리·과학관 보안 장치 해제'
+        ],
+        quotes: [
+          '"나안이야! 수학 문제가 안 풀릴 땐 구하려는 값을 x로 두고 조건부터 나열해 보자."',
+          '"과학은 현상의 원인을 연결하면 암기량이 절반으로 줄어들어!"',
+          '"너라면 금방 풀 수 있어. 내가 전화 너머에서 끝까지 같이 계산해 줄게."'
+        ],
+        tip: '💡 [나안의 암기 팁] 수학 도형이나 함수 문제는 머릿속으로만 풀지 말고 꼭 간단한 스케치를 그려봐! 과학은 용어의 한자 뜻을 연결하면 훨씬 쉬워.',
+        svg: `
+          <svg viewBox="0 0 64 80" class="w-full h-full pixel-art" shape-rendering="crispEdges">
+            <!-- 긴 웨이브 갈색 머리 -->
+            <rect x="16" y="8" width="32" height="36" fill="#5e4c43"/>
+            <rect x="13" y="14" width="38" height="30" fill="#5e4c43"/>
+            <!-- 얼굴 -->
+            <rect x="20" y="16" width="24" height="20" fill="#f8e3d6"/>
+            <rect x="22" y="16" width="20" height="4" fill="#5e4c43"/>
+            <rect x="25" y="24" width="3" height="3" fill="#231f20"/>
+            <rect x="36" y="24" width="3" height="3" fill="#231f20"/>
+            <rect x="30" y="30" width="4" height="3" fill="#d97b84"/>
+            <!-- 화이트 고양이 맨투맨 -->
+            <rect x="17" y="38" width="30" height="20" fill="#f2f2f7"/>
+            <rect x="12" y="40" width="5" height="16" fill="#e6e6f0"/>
+            <rect x="47" y="40" width="5" height="16" fill="#e6e6f0"/>
+            <!-- 가슴 고양이 & 빨간 리본 포인트 -->
+            <rect x="28" y="45" width="8" height="7" fill="#ffffff" stroke="#b0acc4" stroke-width="0.8"/>
+            <rect x="34" y="44" width="3" height="2" fill="#e63946"/>
+            <!-- 연청 와이드 팬츠 & 슬리퍼 -->
+            <rect x="19" y="58" width="12" height="16" fill="#c5d1e8"/>
+            <rect x="33" y="58" width="12" height="16" fill="#c5d1e8"/>
+            <rect x="18" y="74" width="13" height="4" fill="#ffffff"/>
+            <rect x="33" y="74" width="13" height="4" fill="#ffffff"/>
+          </svg>
+        `
+      },
+      {
+        id: 'yekyung',
+        name: '권예경',
+        role: '역사 · 음악 · 미술 · 체육 담당 요정',
+        color: '#ff9eb5',
+        badgeBg: 'bg-[#ff9eb5]/20 text-[#ff9eb5]',
+        outfit: '안경 & 노란 체크 파자마 투피스',
+        personality: '밝고 에너지 넘치는 만능 재주꾼 요정! 역사 스토리텔링부터 음악·미술·체육 상식까지 재미있는 연상법으로 쏙쏙 기억하게 도와줍니다.',
+        skills: [
+          '한국사·세계사 시대별 흐름 스토리텔링',
+          '음악 악보 기호·미술 사조·체육 경기 규칙 요약',
+          '4층 예술·역사관 전시실 열쇠 단서 제공'
+        ],
+        quotes: [
+          '"안녕! 예경이 등장! 역사 연표가 헷갈릴 땐 사건의 인과관계를 이야기처럼 이어보자!"',
+          '"음·미·체는 감각이 중요해! 악보 기호랑 미술 작품 특징은 이미지로 외우면 딱이야."',
+          '"졸릴 땐 기지개 한 번 쭉 켜고 나랑 퀴즈 한 판 풀면서 잠 깨자!"'
+        ],
+        tip: '💡 [예경의 암기 팁] 역사는 왕의 업적을 시간 순서대로 줄 세워 보고, 음악·미술은 대표 작곡가와 화가 이름을 짝지어 외우면 실수하지 않아!',
+        svg: `
+          <svg viewBox="0 0 64 80" class="w-full h-full pixel-art" shape-rendering="crispEdges">
+            <!-- 웨이브 단발 & 끝단 투톤 하이라이트 -->
+            <rect x="16" y="8" width="32" height="26" fill="#3b3330"/>
+            <rect x="13" y="14" width="38" height="20" fill="#3b3330"/>
+            <rect x="14" y="31" width="6" height="4" fill="#e6d39c"/>
+            <rect x="44" y="31" width="6" height="4" fill="#e6d39c"/>
+            <!-- 얼굴 & 사각 안경 -->
+            <rect x="20" y="16" width="24" height="20" fill="#f8e3d6"/>
+            <rect x="21" y="22" width="9" height="6" fill="none" stroke="#5c534f" stroke-width="1.4"/>
+            <rect x="34" y="22" width="9" height="6" fill="none" stroke="#5c534f" stroke-width="1.4"/>
+            <rect x="30" y="24" width="4" height="1.4" fill="#5c534f"/>
+            <rect x="24" y="24" width="3" height="3" fill="#231f20"/>
+            <rect x="37" y="24" width="3" height="3" fill="#231f20"/>
+            <rect x="29" y="30" width="6" height="3" fill="#e06d7d"/>
+            <!-- 노란·분홍 체크 파자마 -->
+            <rect x="17" y="38" width="30" height="20" fill="#f7e39c"/>
+            <rect x="22" y="38" width="3" height="20" fill="#f2b8b5"/>
+            <rect x="31" y="38" width="2" height="20" fill="#d9a773"/>
+            <rect x="39" y="38" width="3" height="20" fill="#f2b8b5"/>
+            <rect x="17" y="46" width="30" height="3" fill="#f2b8b5"/>
+            <rect x="12" y="40" width="5" height="16" fill="#f7e39c"/>
+            <rect x="47" y="40" width="5" height="16" fill="#f7e39c"/>
+            <rect x="19" y="58" width="12" height="15" fill="#f7e39c"/>
+            <rect x="33" y="58" width="12" height="15" fill="#f7e39c"/>
+            <rect x="23" y="58" width="3" height="15" fill="#f2b8b5"/>
+            <rect x="38" y="58" width="3" height="15" fill="#f2b8b5"/>
+            <!-- 하얀 양말 -->
+            <rect x="19" y="73" width="11" height="4" fill="#ffffff"/>
+            <rect x="34" y="73" width="11" height="4" fill="#ffffff"/>
+          </svg>
+        `
+      }
+    ];
+
+    // -----------------------------------------------------------
+    // 5. 맵 데이터 & 8개 개별 과목 퀴즈 문제 은행
+    // -----------------------------------------------------------
+    const mapRoomsData = [
+      { id: 0, floor: '1층 거실', title: '커튼과 폴더폰의 방', subject: '기초 거점', cost: 0, desc: '친구들과 첫 전화 연결에 성공한 안전한 거점입니다.' },
+      { id: 1, floor: '2층 서재', title: '시율의 언어 암호실', subject: '국어 · 영어', cost: 1, desc: '고전 문학과 영단어 자물쇠가 걸려 있는 어두운 서재입니다.' },
+      { id: 2, floor: '3층 실험실', title: '나안의 수리·과학관', subject: '수학 · 과학', cost: 2, desc: '플라스크와 기하학 도형이 떠다니는 기이한 연구실입니다.' },
+      { id: 3, floor: '4층 아틀리에', title: '예경의 예술·역사관', subject: '역사 · 음악 · 미술 · 체육', cost: 3, desc: '고대 유물과 악보, 명화가 빛나는 신비로운 전시관입니다.' },
+      { id: 4, floor: '옥상 탈출구', title: '새벽빛 비상문', subject: '최종 탈출', cost: 4, desc: '모든 열쇠를 모아 현실 세계로 돌아가는 마지막 문입니다.' }
+    ];
+
+    const quizBank = {
+      '국어': [
+        { q: '[국어 맞춤법] 다음 중 맞춤법이 올바른 표현은?', options: ['금새 어두워졌다', '금세 어두워졌다', '금세 어두어졌다'], ans: 1, exp: '"금시에"가 줄어든 말이므로 "금세"가 올바른 표기입니다!' },
+        { q: '[국어 사자성어] "앞뒤가 맞지 않고 모순됨"을 뜻하는 사자성어는?', options: ['자승자박', '어불성설', '일석이조'], ans: 1, exp: '어불성설(語不成說)은 말이 조금도 이치에 맞지 않음을 뜻합니다.' }
+      ],
+      '영어': [
+        { q: '[영어 어휘] "mysterious"의 뜻으로 가장 알맞은 것은?', options: ['신비로운, 기이한', '시끄러운, 번잡한', '평범한, 지루한'], ans: 0, exp: 'mysterious는 "신비로운, 기이한, 불가사의한"이라는 뜻의 형용사예요.' },
+        { q: '[영어 문법] "She ____ studying since 4 AM." 빈칸에 알맞은 것은?', options: ['has been', 'have been', 'was been'], ans: 0, exp: '3인칭 단수 주어(She)와 함께 과거부터 현재까지 이어지는 동작은 has been을 씁니다.' }
+      ],
+      '수학': [
+        { q: '[수학] 일차방정식 3x - 7 = 14 일 때, x의 값은?', options: ['5', '7', '9'], ans: 1, exp: '3x = 14 + 7 = 21 이므로 양변을 3으로 나누면 x = 7 입니다!' },
+        { q: '[수학] 삼각형의 세 내각의 크기의 합은 몇 도인가요?', options: ['90도', '180도', '360도'], ans: 1, exp: '평면 위 모든 삼각형의 세 내각의 합은 항상 180도입니다!' }
+      ],
+      '과학': [
+        { q: '[과학] 식물이 빛에너지를 이용해 양분을 만드는 작용은?', options: ['광합성', '증산 작용', '세포 호흡'], ans: 0, exp: '엽록체에서 빛에너지를 이용해 포도당과 산소를 만드는 과정은 광합성입니다.' },
+        { q: '[과학] 물이 얼음으로 변할 때 일어나는 상태 변화의 이름은?', options: ['융해', '응고', '기화'], ans: 1, exp: '액체(물)가 고체(얼음)로 변하는 현상을 응고라고 합니다.' }
+      ],
+      '역사': [
+        { q: '[역사] 세종대왕이 백성을 위해 창제하여 반포한 문자는?', options: ['이두', '향찰', '훈민정음'], ans: 2, exp: '1443년 창제하고 1446년 반포한 백성을 가르치는 바른 소리, 훈민정음입니다!' },
+        { q: '[역사] 고려를 건국한 태조의 이름은?', options: ['이성계', '왕건', '궁예'], ans: 1, exp: '왕건은 918년 고려를 건국하고 후삼국을 통일했습니다.' }
+      ],
+      '음악': [
+        { q: '[음악] 악보에서 "점점 여리게" 연주하라는 나타냄말은?', options: ['크레셴도 (cresc.)', '데크레셴도 (decresc.)', '포르티시모 (ff)'], ans: 1, exp: '데크레셴도(decrescendo)는 소리를 점점 여리게 줄여가는 셈여림표입니다.' },
+        { q: '[음악] 4분의 4박자에서 한 마디 안에 들어가는 4분음표의 개수는?', options: ['2개', '3개', '4개'], ans: 2, exp: '4/4박자는 4분음표를 한 박으로 하여 한 마디에 4박이 들어갑니다.' }
+      ],
+      '미술': [
+        { q: '[미술] 빛의 변화에 따른 순간적인 인상을 포착한 19세기 미술 사조는?', options: ['인상주의', '입체주의', '초현실주의'], ans: 0, exp: '모네, 르누아르 등이 대표적인 인상주의(Impressionism)의 특징입니다!' },
+        { q: '[미술] 빨강·노랑·파랑처럼 섞어서 다른 색을 만들 수 있는 기본 세 가지 색은?', options: ['보색', '삼원색', '무채색'], ans: 1, exp: '색료의 삼원색은 빨강(마젠타), 노랑, 파랑(시안)입니다.' }
+      ],
+      '체육': [
+        { q: '[체육] 배구 경기에서 한 팀이 코트 안에 들어갈 수 있는 선수 인원은?', options: ['5명', '6명', '9명'], ans: 1, exp: '배구는 한 팀당 6명의 선수가 코트에서 경기를 펼치는 구기 종목입니다.' },
+        { q: '[체육] 운동 전 부상을 예방하기 위해 실시하는 준비 운동의 주요 효과는?', options: ['체온 상승 및 근육 이완', '심박수 급감', '근육 경직'], ans: 0, exp: '준비 운동은 체온을 높이고 관절과 근육을 부드럽게 이완해 부상을 막아줍니다.' }
+      ]
+    };
+
+    // -----------------------------------------------------------
+    // 6. 유틸리티: 토스트 알림 표시 (alert 대체)
+    // -----------------------------------------------------------
+    let toastTimeout = null;
+    function showToast(msg, icon = '🔑') {
+      const box = document.getElementById('toast-box');
+      document.getElementById('toast-msg').textContent = msg;
+      document.getElementById('toast-icon').textContent = icon;
+      box.classList.remove('opacity-0', '-translate-y-4');
+      box.classList.add('opacity-100', 'translate-y-0');
+
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        box.classList.remove('opacity-100', 'translate-y-0');
+        box.classList.add('opacity-0', '-translate-y-4');
+      }, 2600);
+    }
+
+    // -----------------------------------------------------------
+    // 7. 온보딩 1단계: 만화 스토리 제어
+    // -----------------------------------------------------------
+    function renderStoryScene() {
+      const scene = storyScenes[appState.storyIndex];
+      document.getElementById('story-illustration').innerHTML = scene.svg;
+      document.getElementById('story-badge').textContent = scene.badge;
+      document.getElementById('story-sfx').textContent = scene.sfx;
+      document.getElementById('story-text').textContent = scene.text;
+
+      // 상단 진행 도트 업데이트
+      for (let i = 0; i < 4; i++) {
+        const dot = document.getElementById(`story-dot-${i}`);
+        dot.className = i <= appState.storyIndex 
+          ? 'h-1.5 flex-1 rounded-full bg-[#f5d061] transition-all' 
+          : 'h-1.5 flex-1 rounded-full bg-[#474361] transition-all';
+      }
+
+      document.getElementById('btn-story-prev').disabled = appState.storyIndex === 0;
+      document.getElementById('btn-story-next').textContent = 
+        appState.storyIndex === storyScenes.length - 1 ? '전화 받기 & 프로필 등록 📞' : '다음 장면 ▶';
+    }
+
+    function nextStory() {
+      if (appState.storyIndex < storyScenes.length - 1) {
+        appState.storyIndex++;
+        renderStoryScene();
+      } else {
+        skipToProfile();
+      }
+    }
+
+    function prevStory() {
+      if (appState.storyIndex > 0) {
+        appState.storyIndex--;
+        renderStoryScene();
+      }
+    }
+
+    function skipToProfile() {
+      hideAllScreens();
+      document.getElementById('screen-profile-input').classList.remove('hidden');
+      selectAvatarStyle(appState.avatarStyle);
+    }
+
+    // -----------------------------------------------------------
+    // 8. 온보딩 2단계: 이름·나이 및 아바타 입력
+    // -----------------------------------------------------------
+    function selectAvatarStyle(idx) {
+      appState.avatarStyle = idx;
+      document.getElementById('onboarding-avatar-preview').innerHTML = getPlayerAvatarSVG(idx);
+      for (let i = 0; i < 3; i++) {
+        const btn = document.getElementById(`av-style-${i}`);
+        if (i === idx) {
+          btn.className = 'px-2.5 py-1 text-xs rounded-lg border border-[#f5d061] bg-[#454063] text-[#f5d061] font-bold';
+        } else {
+          btn.className = 'px-2.5 py-1 text-xs rounded-lg border border-[#59547a] bg-[#34314a] text-[#b0acc4]';
+        }
+      }
+    }
+
+    function submitProfile(e) {
+      e.preventDefault();
+      const nameVal = document.getElementById('input-name').value.trim();
+      const ageVal = parseInt(document.getElementById('input-age').value, 10);
+      if (!nameVal || isNaN(ageVal)) return;
+
+      appState.userName = nameVal;
+      appState.userAge = ageVal;
+
+      hideAllScreens();
+      document.getElementById('fairy-welcome-name').textContent = appState.userName;
+      document.getElementById('screen-fairies').classList.remove('hidden');
+      showFairyDetail(0);
+    }
+
+    // -----------------------------------------------------------
+    // 9. 온보딩 3단계: 세 명의 과목 요정 소개 카드
+    // -----------------------------------------------------------
+    function showFairyDetail(idx) {
+      appState.selectedFairy = idx;
+      const fairy = fairiesData[idx];
+
+      // 탭 버튼 하이라이트
+      fairiesData.forEach((f, i) => {
+        const tab = document.getElementById(`fairy-tab-${i}`);
+        if (i === idx) {
+          tab.style.borderColor = f.color;
+          tab.className = 'py-2 px-1 rounded-xl border-2 bg-[#3b3754] text-center transition shadow-md';
+        } else {
+          tab.style.borderColor = '#524d70';
+          tab.className = 'py-2 px-1 rounded-xl border-2 bg-[#2c2940] text-center transition opacity-75';
+        }
+      });
+
+      const skillsHtml = fairy.skills.map(s => `<li class="flex items-center gap-1.5"><span style="color:${fairy.color}">✦</span><span>${s}</span></li>`).join('');
+
+      document.getElementById('fairy-detail-card').innerHTML = `
+        <div class="flex items-center gap-3.5 pb-3 border-b border-[#454161]">
+          <div class="w-20 h-24 bg-[#222030] rounded-2xl border border-[#59547a] p-1 shrink-0 animate-float">
+            ${fairy.svg}
+          </div>
+          <div>
+            <span class="inline-block text-[11px] font-bold px-2.5 py-0.5 rounded-full ${fairy.badgeBg} mb-1">
+              ${fairy.role}
+            </span>
+            <h3 class="text-xl font-bold text-[#f4f1ea]">${fairy.name}</h3>
+            <p class="text-[11px] text-[#b0acc4] mt-0.5">${fairy.outfit}</p>
+          </div>
+        </div>
+        <div class="my-2.5 space-y-2">
+          <p class="text-xs leading-relaxed text-[#e6e2f5]">${fairy.personality}</p>
+          <div class="bg-[#232033] p-2.5 rounded-xl border border-[#454161]">
+            <div class="text-[11px] font-bold mb-1" style="color:${fairy.color}">📞 전화 도움 특기</div>
+            <ul class="text-xs text-[#d5d0e8] space-y-1">
+              ${skillsHtml}
+            </ul>
+          </div>
+        </div>
+        <div class="text-[11px] italic text-[#b8a9ff] bg-[#1e1c2b] px-3 py-2 rounded-xl">
+          ${fairy.quotes[0]}
+        </div>
+      `;
+    }
+
+    function enterMainHome() {
+      appState.hasOnboarded = true;
+      saveState();
+      hideAllScreens();
+      document.getElementById('screen-main').classList.remove('hidden');
+      updateUserUI();
+      switchMainTab('home');
+      showToast(`${appState.userName}님, 친구들과 전화가 연결되었습니다!`, '📞');
+    }
+
+    function hideAllScreens() {
+      ['screen-story', 'screen-profile-input', 'screen-fairies', 'screen-main'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+    }
+
+    // -----------------------------------------------------------
+    // 10. 메인 앱 UI 동기화 및 내비게이션
+    // -----------------------------------------------------------
+    function switchMainTab(tabName) {
+      appState.currentTab = tabName;
+
+      // 모든 탭 패널 숨기기 및 하단 버튼 기본 스타일 초기화
+      ['explore', 'home', 'records'].forEach(t => {
+        const panel = document.getElementById(`tab-${t}`);
+        if (panel) panel.classList.add('hidden');
+
+        const btn = document.getElementById(`nav-btn-${t}`);
+        if (btn) {
+          if (t === 'home') {
+            btn.className = 'flex flex-col items-center justify-center py-2 px-3 rounded-full border-2 border-transparent text-[#b0acc4] hover:bg-[#2d2a40] transition';
+          } else {
+            btn.className = 'flex flex-col items-center justify-center py-1.5 px-2 rounded-2xl border-2 border-transparent text-[#b0acc4] hover:bg-[#2d2a40] transition';
+          }
+        }
+      });
+
+      // 선택된 탭 표시 및 하이라이트
+      const activePanel = document.getElementById(`tab-${tabName}`);
+      if (activePanel) activePanel.classList.remove('hidden');
+
+      const activeBtn = document.getElementById(`nav-btn-${tabName}`);
+      if (activeBtn) {
+        if (tabName === 'home') {
+          activeBtn.className = 'flex flex-col items-center justify-center py-2 px-3 rounded-full border-2 border-[#f5d061] bg-[#36324f] text-[#f5d061] shadow-md transition';
+        } else {
+          activeBtn.className = 'flex flex-col items-center justify-center py-1.5 px-2 rounded-2xl border-2 border-[#f5d061] bg-[#36324f] text-[#f5d061] transition';
+        }
+      }
+
+      // 탭별 데이터 렌더링
+      if (tabName === 'home') {
+        updateUserUI();
+      } else if (tabName === 'explore') {
+        renderMapRooms();
+        renderQuizSubjectPills();
+        if (!appState.currentQuiz) {
+          startMiniQuiz(appState.selectedQuizSubject || '국어');
+        }
+        renderTimerSubjectPills();
+      } else if (tabName === 'records') {
+        renderTodoFilterBar();
+        renderTodos();
+        renderStats();
+      }
+    }
+
+    function updateUserUI() {
+      const infoText = `${appState.userName} (${appState.userAge}세)`;
+      document.getElementById('header-user-info').textContent = infoText;
+      document.getElementById('drawer-profile-title').textContent = infoText;
+      document.getElementById('home-user-name').textContent = appState.userName;
+      document.getElementById('header-key-count').textContent = appState.keys;
+      document.getElementById('home-key-count').textContent = appState.keys;
+
+      // 아바타 렌더링
+      document.getElementById('home-avatar-box').innerHTML = getPlayerAvatarSVG(appState.avatarStyle);
+      const level = Math.floor(appState.totalKeysEarned / 3) + 1;
+      document.getElementById('home-avatar-label').textContent = `LV.${level} 탈출 탐험가`;
+
+      // 열쇠 슬롯 시각화 (최대 6개 표시)
+      const slotsContainer = document.getElementById('home-key-slots');
+      let slotsHtml = '';
+      const displayMax = Math.max(5, appState.keys);
+      for (let i = 0; i < Math.min(displayMax, 8); i++) {
+        if (i < appState.keys) {
+          slotsHtml += `<span class="w-6 h-6 rounded-lg bg-[#f5d061]/20 border border-[#f5d061] flex items-center justify-center text-xs">🔑</span>`;
+        } else {
+          slotsHtml += `<span class="w-6 h-6 rounded-lg bg-[#191724] border border-[#3d3957] flex items-center justify-center text-xs opacity-30">🔒</span>`;
+        }
+      }
+      slotsContainer.innerHTML = slotsHtml;
+
+      // 홈 화면 미니 요정 아이콘 렌더링
+      fairiesData.forEach((f, idx) => {
+        document.getElementById(`mini-fairy-${idx}`).innerHTML = f.svg;
+      });
+
+      // 과목별 학습 사진 첨부 영역 초기화
+      renderPhotoStudio();
+    }
+
+    // -----------------------------------------------------------
+    // 10-1. 과목별 학습 사진 첨부 & 요정 맞춤 조언 기능
+    // -----------------------------------------------------------
+    function getFairyBySubject(subj) {
+      const meta = SUBJECT_META[subj] || SUBJECT_META['국어'];
+      return fairiesData.find(f => f.id === meta.fairyId) || fairiesData[0];
+    }
+
+    function renderPhotoStudio() {
+      const pillsEl = document.getElementById('photo-subject-pills');
+      if (!pillsEl) return;
+
+      const currentSubj = appState.selectedPhotoSubject || '국어';
+      const meta = SUBJECT_META[currentSubj];
+      const fairy = getFairyBySubject(currentSubj);
+
+      pillsEl.innerHTML = SUBJECT_LIST.map(subj => {
+        const m = SUBJECT_META[subj];
+        const isActive = subj === currentSubj;
+        const hasPhoto = Boolean(appState.subjectPhotos[subj]?.dataUrl);
+        return `
+          <button type="button" onclick="selectPhotoSubject('${subj}')"
+            class="px-2.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap border transition flex items-center gap-1 ${isActive ? 'bg-[#3d3859] border-[#f5d061] text-[#f5d061]' : 'bg-[#211f30] border-[#4b4768] text-[#b0acc4]'}">
+            <span>${m.icon}</span>
+            <span>${subj}</span>
+            ${hasPhoto ? '<span class="w-1.5 h-1.5 rounded-full bg-[#8ce0c4]"></span>' : ''}
+          </button>
+        `;
+      }).join('');
+
+      document.getElementById('photo-fairy-badge').textContent = `${fairy.name} 담당`;
+      document.getElementById('photo-selected-label').textContent = `${meta.icon} ${currentSubj} 학습 파트 사진`;
+      document.getElementById('photo-selected-label').style.color = meta.color;
+      document.getElementById('btn-analyze-photo-text').textContent = `${fairy.name} 요정에게 사진 보여주고 조언 받기`;
+
+      const saved = appState.subjectPhotos[currentSubj];
+      const previewBox = document.getElementById('photo-preview-box');
+      const clearBtn = document.getElementById('btn-clear-photo');
+      const adviceBox = document.getElementById('photo-advice-box');
+
+      if (saved && saved.dataUrl) {
+        clearBtn.classList.remove('hidden');
+        previewBox.innerHTML = `
+          <img src="${saved.dataUrl}" alt="${currentSubj} 학습 사진" class="max-h-48 w-auto rounded-lg object-contain border border-[#59547a]" />
+          <span class="text-[11px] text-[#b0acc4] mt-1.5">${saved.fileName || '첨부된 학습 자료'}</span>
+        `;
+      } else {
+        clearBtn.classList.add('hidden');
+        previewBox.innerHTML = `
+          <span class="text-2xl mb-1 opacity-70">🖼️</span>
+          <span class="text-xs text-[#8b86a3]">[${currentSubj}] 파트 사진이 아직 없어요.<br>위 [사진 첨부] 버튼으로 교재나 노트를 올려주세요!</span>
+        `;
+      }
+
+      if (saved && saved.advice) {
+        adviceBox.classList.remove('hidden');
+        adviceBox.style.borderColor = fairy.color;
+        document.getElementById('photo-advice-avatar').innerHTML = fairy.svg;
+        document.getElementById('photo-advice-fairy-name').textContent = `${fairy.name} 요정의 ${currentSubj} 맞춤 조언`;
+        document.getElementById('photo-advice-fairy-name').style.color = fairy.color;
+        document.getElementById('photo-advice-part').textContent = saved.partSummary || `${currentSubj} 핵심 파트 분석 완료`;
+        document.getElementById('photo-advice-content').textContent = saved.advice;
+      } else {
+        adviceBox.classList.add('hidden');
+      }
+    }
+
+    function selectPhotoSubject(subj) {
+      appState.selectedPhotoSubject = subj;
+      renderPhotoStudio();
+    }
+
+    function handleSubjectPhotoUpload(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          // 캔버스로 적정 해상도 리사이징 (메모리 및 API 전송 최적화)
+          const canvas = document.createElement('canvas');
+          const maxDim = 900;
+          let w = img.width;
+          let h = img.height;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) {
+              h = Math.round((h * maxDim) / w);
+              w = maxDim;
+            } else {
+              w = Math.round((w * maxDim) / h);
+              h = maxDim;
+            }
+          }
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+          const subj = appState.selectedPhotoSubject || '국어';
+          appState.subjectPhotos[subj] = {
+            dataUrl: compressedDataUrl,
+            fileName: file.name,
+            advice: null,
+            partSummary: null
+          };
+          renderPhotoStudio();
+          showToast(`[${subj}] 사진이 첨부되었어요! 이제 요정에게 조언을 받아보세요.`, '📸');
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+      event.target.value = '';
+    }
+
+    function clearSubjectPhoto() {
+      const subj = appState.selectedPhotoSubject || '국어';
+      delete appState.subjectPhotos[subj];
+      renderPhotoStudio();
+      showToast(`[${subj}] 첨부 사진을 삭제했습니다.`, '🗑️');
+    }
+
+    async function analyzeSubjectPhoto() {
+      const subj = appState.selectedPhotoSubject || '국어';
+      const photoEntry = appState.subjectPhotos[subj];
+      if (!photoEntry || !photoEntry.dataUrl) {
+        showToast(`먼저 [${subj}] 공부 사진을 첨부해 주세요!`, '📷');
+        return;
+      }
+
+      const fairy = getFairyBySubject(subj);
+      const btn = document.getElementById('btn-analyze-photo');
+      const btnText = document.getElementById('btn-analyze-photo-text');
+      btn.disabled = true;
+      btnText.textContent = `${fairy.name} 요정이 사진을 꼼꼼히 살펴보는 중...`;
+
+      const base64Data = photoEntry.dataUrl.split(',')[1];
+      const promptText = `너는 미스터리 방탈출 공부 앱의 과목 요정 '${fairy.name}'이야. 담당 과목은 '${fairy.role}'이고, 성격은 '${fairy.personality}'이야.
+사용자가 지금 공부하고 있는 '${subj}' 과목의 교재/필기/문제 사진을 올렸어.
+1. 사진 속에 보이는 단원이나 학습 파트가 무엇인지 한 줄로 짚어주고,
+2. '${fairy.name}'의 친근한 반말 캐릭터 말투로 이 파트에서 꼭 기억해야 할 핵심 개념 2가지와 실전 암기/문제풀이 팁 1가지를 알기 쉽게 조언해 줘. (전체 4~6문장 이내로 깔끔하게 작성해 줘.)`;
+
+      try {
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+        const payload = {
+          contents: [
+            {
+              role: "user",
+              parts: [
+                { text: promptText },
+                {
+                  inlineData: {
+                    mimeType: "image/jpeg",
+                    data: base64Data
+                  }
+                }
+              ]
+            }
+          ]
+        };
+
+        let resultData = null;
+        const delays = [1000, 2000, 4000];
+        for (let attempt = 0; attempt <= delays.length; attempt++) {
+          const resp = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (resp.ok) {
+            resultData = await resp.json();
+            break;
+          }
+          if (attempt < delays.length) {
+            await new Promise(r => setTimeout(r, delays[attempt]));
+          }
+        }
+
+        const aiText = resultData?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (aiText) {
+          photoEntry.partSummary = `📸 ${subj} 업로드 자료 맞춤 분석 완료`;
+          photoEntry.advice = aiText.trim();
+        } else {
+          throw new Error('Empty response');
+        }
+      } catch (err) {
+        // 오프라인/예외 상황 시 해당 요정의 과목별 맞춤 조언 제공
+        const fallbackTips = {
+          '국어': `사진으로 올린 국어 파트 잘 봤어! 지문 속 핵심 화제와 접속어(그러나, 따라서) 앞뒤 문장에 밑줄을 그으면서 구조를 먼저 파악해 봐. 선지를 고를 땐 지문에 없는 과장된 표현부터 지워나가는 게 포인트야!`,
+          '영어': `올려준 영어 파트 확인 완료! 문장이 길어질수록 주어와 본동사부터 동그라미 치고, 핵심 어휘는 예문 덩어리째 소리 내어 3번 읽어봐. 시제와 수일치만 놓치지 않아도 정답률이 확 올라갈 거야!`,
+          '수학': `사진 속 수학 파트 꼼꼼히 봤어! 공식만 바로 대입하려 하지 말고 문제에서 주어진 조건을 식으로 먼저 정리해 봐. 풀이 과정을 한 줄씩 깔끔하게 적으면 계산 실수를 절반 이상 줄일 수 있어!`,
+          '과학': `과학 필기/교재 사진 잘 봤어! 현상이 일어나는 '원인 → 과정 → 결과' 흐름을 화살표로 연결해서 이해해 봐. 그래프나 실험 표가 나오면 가로축과 세로축이 무엇을 뜻하는지부터 꼭 확인해야 해!`,
+          '역사': `역사 파트 사진 확인했어! 사건의 연도 숫자만 외우려 하지 말고 '무슨 배경 때문에 이 사건이 일어났고, 그 결과 무엇이 바뀌었는지' 이야기 흐름으로 이어봐. 왕이나 인물의 대표 업적 2개씩만 짝지어도 훨씬 쉬워!`,
+          '음악': `음악 파트 자료 잘 봤어! 악보 기호나 음악사 시대별 특징은 대표 작곡가와 대표곡을 하나로 묶어서 외우면 절대 안 헷갈려. 빠르기말과 셈여림표는 반대말끼리 세트로 정리해 두자!`,
+          '미술': `미술 파트 사진 확인 완료! 미술 사조나 조형 요소는 작품의 전체적인 분위기와 색채, 구도 특징을 이미지로 떠올리며 기억해 봐. 대표 화가와 작품 이름을 1:1로 연결해서 복습하면 완벽해!`,
+          '체육': `체육 파트 자료 잘 봤어! 경기 규칙과 반칙 기준, 그리고 운동 원리는 실제 경기 장면을 머릿속으로 시뮬레이션하면서 외우면 금방 기억나. 안전 수칙과 준비 운동 효과도 시험에 자주 나오니 꼭 체크해 둬!`
+        };
+        photoEntry.partSummary = `📸 ${subj} 학습 자료 확인 완료 (${fairy.name}의 맞춤 가이드)`;
+        photoEntry.advice = fallbackTips[subj] || fairy.tip;
+      } finally {
+        btn.disabled = false;
+        renderPhotoStudio();
+        showToast(`${fairy.name} 요정의 ${subj} 맞춤 조언이 도착했어요!`, '🧚');
+      }
+    }
+
+    // -----------------------------------------------------------
+    // 11. 홈 화면 기능: 폴더폰 통화 & 아바타 빠른 변경
+    // -----------------------------------------------------------
+    function changeAvatarQuick() {
+      appState.avatarStyle = (appState.avatarStyle + 1) % 3;
+      saveState();
+      updateUserUI();
+      showToast('잠옷/의상을 갈아입었습니다!', '👕');
+    }
+
+    function callFairy(idx) {
+      appState.activeCallFairy = idx;
+      const fairy = fairiesData[idx];
+      const randomQuote = fairy.quotes[Math.floor(Math.random() * fairy.quotes.length)];
+      
+      const box = document.getElementById('phone-call-box');
+      box.classList.remove('hidden');
+      box.style.borderColor = fairy.color;
+      document.getElementById('call-fairy-title').textContent = `${fairy.name} 요정과 통화 연결됨`;
+      document.getElementById('call-fairy-title').style.color = fairy.color;
+      document.getElementById('call-dialogue').textContent = randomQuote;
+    }
+
+    function getFairyStudyTip() {
+      const fairy = fairiesData[appState.activeCallFairy];
+      document.getElementById('call-dialogue').textContent = fairy.tip;
+    }
+
+    function goFairyQuiz() {
+      const fairy = fairiesData[appState.activeCallFairy];
+      const defaultSubjByFairy = { siyul: '국어', naan: '수학', yekyung: '역사' };
+      switchMainTab('explore');
+      switchExploreSub('minigame');
+      startMiniQuiz(defaultSubjByFairy[fairy.id] || '국어');
+    }
+
+    function closeCallBox() {
+      document.getElementById('phone-call-box').classList.add('hidden');
+    }
+
+    // -----------------------------------------------------------
+    // 12. 왼쪽 버튼: 탐험 (열린 맵, 미니게임, 모드)
+    // -----------------------------------------------------------
+    function switchExploreSub(sub) {
+      ['map', 'minigame', 'mode'].forEach(s => {
+        document.getElementById(`explore-sub-${s}`).classList.add('hidden');
+        const btn = document.getElementById(`sub-btn-${s}`);
+        btn.className = 'py-2 text-xs font-bold rounded-xl text-[#b0acc4] transition';
+      });
+      document.getElementById(`explore-sub-${sub}`).classList.remove('hidden');
+      document.getElementById(`sub-btn-${sub}`).className = 'py-2 text-xs font-bold rounded-xl bg-[#3c3857] text-[#f5d061] transition';
+    }
+
+    function renderMapRooms() {
+      const unlockedCount = appState.unlockedRooms.filter(Boolean).length;
+      document.getElementById('map-progress-text').textContent = `해금된 방: ${unlockedCount} / ${mapRoomsData.length}`;
+
+      const html = mapRoomsData.map((room, idx) => {
+        const isUnlocked = appState.unlockedRooms[idx];
+        return `
+          <div class="p-3 rounded-2xl border ${isUnlocked ? 'bg-[#36324f] border-[#8ce0c4]/60' : 'bg-[#211f30] border-[#454161]'} flex items-center justify-between gap-2">
+            <div>
+              <div class="flex items-center gap-1.5">
+                <span class="text-[10px] px-2 py-0.5 rounded-full ${isUnlocked ? 'bg-[#8ce0c4]/20 text-[#8ce0c4]' : 'bg-[#3a3652] text-[#b0acc4]'} font-bold">
+                  ${room.floor} · ${room.subject}
+                </span>
+              </div>
+              <div class="text-sm font-bold text-[#f4f1ea] mt-1">${isUnlocked ? '🔓' : '🔒'} ${room.title}</div>
+              <p class="text-[11px] text-[#b0acc4] mt-0.5">${room.desc}</p>
+            </div>
+            <div class="shrink-0">
+              ${isUnlocked 
+                ? `<button onclick="switchExploreSub('minigame')" class="px-3 py-1.5 rounded-xl bg-[#8ce0c4] text-[#192421] text-xs font-bold">탐색</button>`
+                : `<button onclick="unlockRoom(${idx})" class="px-3 py-1.5 rounded-xl bg-[#f5d061] text-[#1e1b2c] text-xs font-bold">🔑 ${room.cost}개 해금</button>`
+              }
+            </div>
+          </div>
+        `;
+      }).join('');
+      document.getElementById('map-rooms-list').innerHTML = html;
+    }
+
+    function unlockRoom(idx) {
+      const room = mapRoomsData[idx];
+      if (appState.keys < room.cost) {
+        showToast(`열쇠가 부족해요! (필요: ${room.cost}개 / 보유: ${appState.keys}개)`, '🔒');
+        return;
+      }
+      appState.keys -= room.cost;
+      appState.unlockedRooms[idx] = true;
+      saveState();
+      updateUserUI();
+      renderMapRooms();
+      showToast(`"${room.title}"의 잠긴 문이 열렸습니다!`, '🔓');
+    }
+
+    // 개별 8과목 미니게임 퀴즈
+    function renderQuizSubjectPills() {
+      const container = document.getElementById('quiz-subject-pills');
+      if (!container) return;
+      container.innerHTML = SUBJECT_LIST.map(subj => {
+        const meta = SUBJECT_META[subj];
+        const active = appState.selectedQuizSubject === subj;
+        return `
+          <button onclick="startMiniQuiz('${subj}')" class="px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap border transition ${active ? 'bg-[#3d3859] border-[#f5d061] text-[#f5d061]' : 'bg-[#252236] border-[#4b4768] text-[#b0acc4]'}">
+            ${meta.icon} ${subj}
+          </button>
+        `;
+      }).join('');
+    }
+
+    function startMiniQuiz(subjectName) {
+      appState.selectedQuizSubject = subjectName;
+      renderQuizSubjectPills();
+
+      const list = quizBank[subjectName] || quizBank['국어'];
+      const picked = list[Math.floor(Math.random() * list.length)];
+      const meta = SUBJECT_META[subjectName];
+      appState.currentQuiz = { ...picked, subject: subjectName, answered: false };
+
+      const optionsHtml = picked.options.map((opt, idx) => `
+        <button onclick="submitQuizAnswer(${idx})" id="quiz-opt-${idx}" class="w-full text-left p-3 rounded-xl bg-[#2b283d] hover:bg-[#383450] border border-[#524d70] text-xs text-[#f4f1ea] transition">
+          <span class="font-bold text-[#f5d061] mr-1.5">${idx + 1}.</span> ${opt}
+        </button>
+      `).join('');
+
+      document.getElementById('quiz-arena').innerHTML = `
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${meta.badge}">${meta.icon} ${subjectName} · ${meta.fairy}</span>
+          <span class="text-[11px] text-[#8ce0c4]">보상: 🔑 +1</span>
+        </div>
+        <p class="text-sm font-bold text-[#f4f1ea] leading-relaxed mb-3">${picked.q}</p>
+        <div class="space-y-2 mb-3">${optionsHtml}</div>
+        <div id="quiz-feedback" class="hidden p-3 rounded-xl bg-[#252236] border border-[#8ce0c4]/50 text-xs text-[#d5d0e8]"></div>
+      `;
+    }
+
+    function submitQuizAnswer(selectedIdx) {
+      const q = appState.currentQuiz;
+      if (!q || q.answered) return;
+      q.answered = true;
+
+      const feedback = document.getElementById('quiz-feedback');
+      feedback.classList.remove('hidden');
+
+      if (selectedIdx === q.ans) {
+        document.getElementById(`quiz-opt-${selectedIdx}`).classList.add('border-[#8ce0c4]', 'bg-[#263d38]');
+        appState.keys += 1;
+        appState.totalKeysEarned += 1;
+        appState.quizSolvedCount += 1;
+        appState.studyMinutes[q.subject] = (appState.studyMinutes[q.subject] || 0) + 10;
+        saveState();
+        updateUserUI();
+        feedback.innerHTML = `
+          <div class="font-bold text-[#8ce0c4] mb-1">🎉 정답입니다! 탈출 열쇠 +1개 획득!</div>
+          <p class="mb-2">${q.exp}</p>
+          <button onclick="startMiniQuiz('${q.subject}')" class="px-3 py-1.5 rounded-lg bg-[#f5d061] text-[#1e1b2c] font-bold">다음 문제 도전 ▶</button>
+        `;
+        showToast(`[${q.subject}] 정답! 열쇠 1개를 획득했습니다!`, '🔑');
+      } else {
+        document.getElementById(`quiz-opt-${selectedIdx}`).classList.add('border-[#ff9eb5]', 'bg-[#422633]');
+        document.getElementById(`quiz-opt-${q.ans}`).classList.add('border-[#8ce0c4]');
+        feedback.innerHTML = `
+          <div class="font-bold text-[#ff9eb5] mb-1">💦 아쉬워요! 다시 한 번 도전해 볼까요?</div>
+          <p class="mb-2">${q.exp}</p>
+          <button onclick="startMiniQuiz('${q.subject}')" class="px-3 py-1.5 rounded-lg bg-[#b8a9ff] text-[#1e1b2c] font-bold">새 문제 받기 🔄</button>
+        `;
+      }
+    }
+
+    // 집중 공부 타이머 (과목 선택 및 원그래프 통계 연동)
+    function renderTimerSubjectPills() {
+      const container = document.getElementById('timer-subject-pills');
+      if (!container) return;
+      container.innerHTML = SUBJECT_LIST.map(subj => {
+        const meta = SUBJECT_META[subj];
+        const active = appState.timerSubject === subj;
+        return `
+          <button type="button" onclick="selectTimerSubject('${subj}')"
+            class="px-2.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap border transition ${active ? 'bg-[#3d3859] border-[#f5d061] text-[#f5d061]' : 'bg-[#211f30] border-[#4b4768] text-[#b0acc4]'}">
+            ${meta.icon} ${subj}
+          </button>
+        `;
+      }).join('');
+
+      const activeMeta = SUBJECT_META[appState.timerSubject] || SUBJECT_META['국어'];
+      const labelEl = document.getElementById('timer-selected-subject');
+      if (labelEl) {
+        labelEl.textContent = `${activeMeta.icon} ${appState.timerSubject} 공부 선택됨`;
+        labelEl.style.color = activeMeta.color;
+      }
+    }
+
+    function selectTimerSubject(subj) {
+      if (appState.timerRunning) {
+        showToast('타이머 일시정지 후 과목을 변경할 수 있어요!', '⏱️');
+        return;
+      }
+      appState.timerSubject = subj;
+      renderTimerSubjectPills();
+    }
+
+    function setTimerMinutes(mins) {
+      if (appState.timerRunning) return;
+      appState.timerInitialSeconds = mins * 60;
+      appState.timerSeconds = mins * 60;
+      updateTimerDisplay();
+    }
+
+    function updateTimerDisplay() {
+      const m = String(Math.floor(appState.timerSeconds / 60)).padStart(2, '0');
+      const s = String(appState.timerSeconds % 60).padStart(2, '0');
+      document.getElementById('timer-display').textContent = `${m}:${s}`;
+    }
+
+    function recordTimerStudyMinutes(mins) {
+      if (mins <= 0) return;
+      const subj = appState.timerSubject || '국어';
+      appState.studyMinutes[subj] = (appState.studyMinutes[subj] || 0) + mins;
+      saveState();
+      if (appState.currentTab === 'records') renderStats();
+    }
+
+    function toggleStudyTimer() {
+      const btn = document.getElementById('btn-timer-toggle');
+      const status = document.getElementById('timer-status');
+      if (appState.timerRunning) {
+        clearInterval(appState.timerInterval);
+        appState.timerRunning = false;
+        btn.textContent = '▶ 집중 재개';
+        status.textContent = '일시정지';
+      } else {
+        appState.timerRunning = true;
+        btn.textContent = '⏸ 일시정지';
+        status.textContent = `${appState.timerSubject} 집중 기록 중...`;
+        appState.timerInterval = setInterval(() => {
+          if (appState.timerSeconds > 0) {
+            appState.timerSeconds--;
+            updateTimerDisplay();
+          } else {
+            clearInterval(appState.timerInterval);
+            appState.timerRunning = false;
+            const earnedMins = Math.max(1, Math.round(appState.timerInitialSeconds / 60));
+            recordTimerStudyMinutes(earnedMins);
+            appState.keys += 1;
+            appState.totalKeysEarned += 1;
+            saveState();
+            updateUserUI();
+            btn.textContent = '▶ 집중 시작';
+            status.textContent = '목표 달성 완료!';
+            showToast(`[${appState.timerSubject}] ${earnedMins}분 통계 반영 & 열쇠 +1!`, '🎉');
+          }
+        }, 1000);
+      }
+    }
+
+    function finishStudyEarly() {
+      const elapsedSecs = appState.timerInitialSeconds - appState.timerSeconds;
+      const elapsedMins = Math.floor(elapsedSecs / 60);
+      if (elapsedMins < 1) {
+        showToast('최소 1분 이상 공부해야 통계에 저장할 수 있어요!', '⏱️');
+        return;
+      }
+      clearInterval(appState.timerInterval);
+      appState.timerRunning = false;
+      recordTimerStudyMinutes(elapsedMins);
+      appState.timerSeconds = appState.timerInitialSeconds;
+      updateTimerDisplay();
+      document.getElementById('btn-timer-toggle').textContent = '▶ 집중 시작';
+      document.getElementById('timer-status').textContent = '통계 저장 완료';
+      showToast(`[${appState.timerSubject}] ${elapsedMins}분이 원그래프 통계에 저장되었습니다!`, '📊');
+    }
+
+    function resetStudyTimer() {
+      clearInterval(appState.timerInterval);
+      appState.timerRunning = false;
+      appState.timerSeconds = appState.timerInitialSeconds;
+      updateTimerDisplay();
+      document.getElementById('btn-timer-toggle').textContent = '▶ 집중 시작';
+      document.getElementById('timer-status').textContent = '대기 중';
+    }
+
+    function selectStudyMode(modeName) {
+      document.getElementById('current-mode-badge').textContent = `현재 모드: ${modeName}`;
+      showToast(`"${modeName}"(으)로 전환되었습니다.`, '✨');
+    }
+
+    // -----------------------------------------------------------
+    // 13. 오른쪽 버튼: 기록 (개별 과목 TO-DO & 원그래프 통계)
+    // -----------------------------------------------------------
+    function switchRecordSub(sub) {
+      ['todo', 'stats'].forEach(s => {
+        document.getElementById(`record-sub-${s}`).classList.add('hidden');
+        document.getElementById(`rec-btn-${s}`).className = 'py-2 text-xs font-bold rounded-xl text-[#b0acc4] transition';
+      });
+      document.getElementById(`record-sub-${sub}`).classList.remove('hidden');
+      document.getElementById(`rec-btn-${sub}`).className = 'py-2 text-xs font-bold rounded-xl bg-[#3c3857] text-[#f5d061] transition';
+      if (sub === 'stats') renderStats();
+    }
+
+    function selectPieSlice(subj) {
+      const meta = SUBJECT_META[subj];
+      const mins = appState.studyMinutes[subj] || 0;
+      const totalMins = SUBJECT_LIST.reduce((acc, s) => acc + (appState.studyMinutes[s] || 0), 0);
+      const pct = totalMins > 0 ? Math.round((mins / totalMins) * 100) : 0;
+      const detailEl = document.getElementById('pie-selected-detail');
+      if (detailEl) {
+        detailEl.innerHTML = `<span style="color:${meta.color}" class="font-bold">${meta.icon} ${subj}</span> (${meta.fairy}) : <strong class="text-[#f4f1ea]">${mins}분</strong> (${pct}%)`;
+      }
+    }
+
+    function renderStats() {
+      const doneTasks = appState.todos.filter(t => t.done).length;
+      const totalMins = SUBJECT_LIST.reduce((acc, s) => acc + (appState.studyMinutes[s] || 0), 0);
+
+      document.getElementById('stat-todo-done').textContent = `${doneTasks}개`;
+      document.getElementById('stat-total-keys').textContent = `${appState.keys}개`;
+      document.getElementById('stat-total-mins').textContent = `${totalMins}분`;
+
+      // SVG 원그래프 (도넛 파이 차트) 생성
+      const radius = 72;
+      const circumference = 2 * Math.PI * radius;
+      let accumulatedOffset = 0;
+
+      const slicesSvg = totalMins > 0
+        ? SUBJECT_LIST.map(subj => {
+            const meta = SUBJECT_META[subj];
+            const mins = appState.studyMinutes[subj] || 0;
+            if (mins <= 0) return '';
+            const fraction = mins / totalMins;
+            const dashLength = fraction * circumference;
+            const strokeDasharray = `${dashLength} ${circumference}`;
+            const strokeDashoffset = -accumulatedOffset;
+            accumulatedOffset += dashLength;
+
+            return `
+              <circle
+                cx="100" cy="100" r="${radius}"
+                fill="transparent"
+                stroke="${meta.color}"
+                stroke-width="32"
+                stroke-dasharray="${strokeDasharray}"
+                stroke-dashoffset="${strokeDashoffset}"
+                onclick="selectPieSlice('${subj}')"
+                class="cursor-pointer transition-opacity hover:opacity-80"
+              />
+            `;
+          }).join('')
+        : `<circle cx="100" cy="100" r="${radius}" fill="transparent" stroke="#3a3652" stroke-width="32" />`;
+
+      document.getElementById('pie-chart-wrapper').innerHTML = `
+        <svg viewBox="0 0 200 200" class="w-full h-full -rotate-90 overflow-visible">
+          ${slicesSvg}
+        </svg>
+        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+          <span class="text-[10px] text-[#b0acc4]">총 누적 학습</span>
+          <span class="text-lg font-bold text-[#f4f1ea]">${totalMins}분</span>
+        </div>
+      `;
+
+      // 8개 과목 범례 그리드
+      const legendHtml = SUBJECT_LIST.map(subj => {
+        const meta = SUBJECT_META[subj];
+        const mins = appState.studyMinutes[subj] || 0;
+        const pct = totalMins > 0 ? Math.round((mins / totalMins) * 100) : 0;
+        return `
+          <button type="button" onclick="selectPieSlice('${subj}')"
+            class="bg-[#1f1d2e] hover:bg-[#2a273d] p-2.5 rounded-xl border border-[#454161] flex items-center justify-between text-left transition">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color:${meta.color}"></span>
+              <span class="text-xs font-bold text-[#f4f1ea] truncate">${subj}</span>
+            </div>
+            <span class="text-[11px] text-[#d5d0e8] shrink-0 ml-1">${mins}분 (${pct}%)</span>
+          </button>
+        `;
+      }).join('');
+
+      document.getElementById('subject-legend-container').innerHTML = legendHtml;
+    }
+
+    function renderTodoFilterBar() {
+      const bar = document.getElementById('todo-filter-bar');
+      if (!bar) return;
+      const filters = ['전체', ...SUBJECT_LIST];
+      bar.innerHTML = filters.map(f => {
+        const isActive = appState.selectedTodoFilter === f;
+        const count = f === '전체'
+          ? appState.todos.length
+          : appState.todos.filter(t => t.subject === f).length;
+        return `
+          <button type="button" onclick="setTodoFilter('${f}')"
+            class="px-2.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap border transition ${isActive ? 'bg-[#f5d061] text-[#1e1b2c] border-[#f5d061]' : 'bg-[#211f30] text-[#b0acc4] border-[#454161] hover:border-[#6b658e]'}">
+            ${f} <span class="text-[10px] opacity-80">${count}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function setTodoFilter(filterName) {
+      appState.selectedTodoFilter = filterName;
+      renderTodoFilterBar();
+      renderTodos();
+    }
+
+    function renderTodos() {
+      const doneCount = appState.todos.filter(t => t.done).length;
+      document.getElementById('todo-counter').textContent = `완료 ${doneCount} / ${appState.todos.length}`;
+
+      const filteredTodos = appState.selectedTodoFilter === '전체'
+        ? appState.todos
+        : appState.todos.filter(t => t.subject === appState.selectedTodoFilter);
+
+      const listHtml = filteredTodos.map(item => {
+        const meta = SUBJECT_META[item.subject] || SUBJECT_META['국어'];
+        return `
+          <li class="p-3 rounded-xl border ${item.done ? 'bg-[#222030] border-[#454161] opacity-75' : 'bg-[#36324f] border-[#5d5780]'} flex items-center justify-between gap-2">
+            <button onclick="toggleTodo(${item.id})" class="flex items-start gap-2.5 text-left flex-1 min-w-0">
+              <span class="mt-0.5 w-5 h-5 rounded-md border flex items-center justify-center text-xs shrink-0 ${item.done ? 'bg-[#8ce0c4] border-[#8ce0c4] text-[#192421] font-bold' : 'border-[#b0acc4]'}">
+                ${item.done ? '✓' : ''}
+              </span>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-1.5 mb-1 flex-wrap">
+                  <span class="text-[10px] px-2 py-0.5 rounded-md border font-bold ${meta.badge}">
+                    [${item.subject}]
+                  </span>
+                  <span class="text-[10px] text-[#b0acc4]">${meta.fairy}</span>
+                </div>
+                <span class="text-xs text-[#f4f1ea] block break-words ${item.done ? 'line-through text-[#8b86a3]' : ''}">${item.text}</span>
+              </div>
+            </button>
+            <button onclick="deleteTodo(${item.id})" class="text-xs text-[#8b86a3] hover:text-[#ff9eb5] px-1.5 shrink-0">삭제</button>
+          </li>
+        `;
+      }).join('');
+
+      document.getElementById('todo-list').innerHTML = listHtml || `<li class="text-xs text-center text-[#8b86a3] py-5">선택한 과목에 등록된 할 일이 없습니다. 위에서 추가해 보세요!</li>`;
+    }
+
+    function addTodoItem(e) {
+      e.preventDefault();
+      const subj = document.getElementById('todo-subject').value;
+      const input = document.getElementById('todo-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      appState.todos.unshift({
+        id: Date.now(),
+        subject: subj,
+        text,
+        done: false
+      });
+      input.value = '';
+      saveState();
+      renderTodoFilterBar();
+      renderTodos();
+      showToast(`[${subj}] 새 공부 TO-DO가 추가되었습니다!`, '📝');
+    }
+
+    function toggleTodo(id) {
+      const target = appState.todos.find(t => t.id === id);
+      if (!target) return;
+      target.done = !target.done;
+      if (target.done) {
+        appState.keys += 1;
+        appState.totalKeysEarned += 1;
+        appState.studyMinutes[target.subject] = (appState.studyMinutes[target.subject] || 0) + 15;
+        updateUserUI();
+        showToast(`[${target.subject}] 완료! 보상 열쇠 +1개 획득!`, '🔑');
+      }
+      saveState();
+      renderTodoFilterBar();
+      renderTodos();
+    }
+
+    function deleteTodo(id) {
+      appState.todos = appState.todos.filter(t => t.id !== id);
+      saveState();
+      renderTodoFilterBar();
+      renderTodos();
+    }
+
+    // -----------------------------------------------------------
+    // 14. 좌측 햄버거 메뉴 드로어 제어
+    // -----------------------------------------------------------
+    function toggleDrawer(open) {
+      const drawer = document.getElementById('side-drawer');
+      const overlay = document.getElementById('drawer-overlay');
+      if (open) {
+        overlay.classList.remove('hidden');
+        drawer.classList.remove('-translate-x-full');
+      } else {
+        overlay.classList.add('hidden');
+        drawer.classList.add('-translate-x-full');
+      }
+    }
+
+    function replayStory() {
+      toggleDrawer(false);
+      appState.storyIndex = 0;
+      hideAllScreens();
+      document.getElementById('screen-story').classList.remove('hidden');
+      renderStoryScene();
+    }
+
+    function reopenFairies() {
+      toggleDrawer(false);
+      hideAllScreens();
+      document.getElementById('fairy-welcome-name').textContent = appState.userName;
+      document.getElementById('screen-fairies').classList.remove('hidden');
+      showFairyDetail(0);
+    }
+
+    function reopenProfileEdit() {
+      toggleDrawer(false);
+      document.getElementById('input-name').value = appState.userName;
+      document.getElementById('input-age').value = appState.userAge;
+      skipToProfile();
+    }
+
+    function resetAllProgress() {
+      toggleDrawer(false);
+      localStorage.removeItem(STORAGE_KEY);
+      appState.hasOnboarded = false;
+      appState.keys = 3;
+      appState.totalKeysEarned = 3;
+      appState.storyIndex = 0;
+      appState.selectedTodoFilter = '전체';
+      appState.unlockedRooms = [true, true, false, false, false];
+      appState.todos = JSON.parse(JSON.stringify(defaultTodos));
+      hideAllScreens();
+      document.getElementById('screen-story').classList.remove('hidden');
+      renderStoryScene();
+      showToast('모든 진행도가 초기화되었습니다.', '🔄');
+    }
+
+    // 초기 실행: 저장된 기록이 있으면 홈으로, 없으면 인트로 스토리 1컷부터 시작
+    window.addEventListener('DOMContentLoaded', () => {
+      const restored = loadState();
+      if (restored) {
+        hideAllScreens();
+        document.getElementById('screen-main').classList.remove('hidden');
+        updateUserUI();
+        switchMainTab('home');
+      } else {
+        renderStoryScene();
+      }
+    });
+  </script>
+</body>
+</html>
